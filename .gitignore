@@ -4,8 +4,4 @@ venv
 
 __pycache__
 
-settings.py
-
 db.sqlite3
-
-node_modules
