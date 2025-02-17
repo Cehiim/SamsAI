@@ -12,6 +12,8 @@ class Conversa(models.Model):
         verbose_name = "Conversa"
         verbose_name_plural = "Conversas"
 
+# Colocar limites de conversas e mensagens
+
 class Mensagem(models.Model):
     conversa = models.ForeignKey(Conversa, on_delete=models.PROTECT, related_name="mensagens", null=True)
     texto = models.TextField("Texto", max_length=10000)
