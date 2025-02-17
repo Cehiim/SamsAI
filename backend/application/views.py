@@ -43,7 +43,11 @@ class LoginView(View):
         return render(request, "login.html")
 
 class CadastroView(View):
-    pass
+    def get(self, request):
+        return render(request, 'cadastro.html')
+        
+    def post(self, request):
+        pass
 
 class ChatBotView(LoginRequiredMixin, View):
     def get(self, request, conversa_id):
@@ -66,6 +70,6 @@ class ChatBotView(LoginRequiredMixin, View):
 
 
 class NewChatBotView(LoginRequiredMixin, View):
-    def get(self, request, usuario_id):
+    def get(self, request, conversa_id):
         if not request.user.is_authenticated:
             return HttpResponseRedirect(reverse('login'))
