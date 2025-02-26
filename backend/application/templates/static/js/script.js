@@ -1,259 +1,397 @@
-document.addEventListener("DOMContentLoaded", () => {
-  /* ------------------------------------------------
-     Variável para armazenar os usuários registrados
-     (inicia com o usuário padrão)
-  ------------------------------------------------ */
-  const registeredUsers = {
-    "Usuário@gmail.com": "Senha123"
-  };
+document.addEventListener("DOMContentLoaded", function() {
+  // Verifica qual página foi carregada com base na existência de elementos específicos
+  if (document.getElementById("loginContainer")) {
+    initLoginPage();
+  } else if (document.querySelector(".conversation-container")) {
+    initConversationPage();
+  } else if (document.getElementById("chatContainer")) {
+    initChatPage();
+  }
+});
 
-  /* ------------------------------------------------
-     Lógica de Login e Criação de Conta
-  ------------------------------------------------ */
-  const loginContainer = document.getElementById("loginContainer");
-  const chatContainer = document.getElementById("chatContainer");
-  
-  // Elementos do formulário de login
-  const loginForm = document.getElementById("loginForm");
-  const usernameInput = document.getElementById("usernameInput");
-  const passwordInput = document.getElementById("passwordInput");
-  const loginBtn = document.getElementById("loginBtn");
-  const loginError = document.getElementById("loginError");
-  const showRegisterBtn = document.getElementById("showRegisterBtn");
-
-  // Elementos do formulário de criação de conta
-  const registerForm = document.getElementById("registerForm");
-  const registerEmail = document.getElementById("registerEmail");
-  const registerName = document.getElementById("registerName");
+/* ====================================================
+   LÓGICA DA PÁGINA DE LOGIN / CADASTRO (login.html)
+   ==================================================== */
+function initLoginPage() {
+  // ---------------------------
+  // Seleção dos elementos do DOM
+  // ---------------------------
+  const loginContainer   = document.getElementById("loginContainer");
+  const loginForm        = document.getElementById("loginForm");
+  const registerForm     = document.getElementById("registerForm");
+  const usernameInput    = document.getElementById("usernameInput");
+  const passwordInput    = document.getElementById("passwordInput");
+  const loginBtn         = document.getElementById("loginBtn");
+  const loginError       = document.getElementById("loginError");
+  const showRegisterBtn  = document.getElementById("showRegisterBtn");
+  const registerName     = document.getElementById("registerName");
+  const registerEmail    = document.getElementById("registerEmail");
   const registerPassword = document.getElementById("registerPassword");
-  const registerError = document.getElementById("registerError");
+  const registerError    = document.getElementById("registerError");
   const createAccountBtn = document.getElementById("createAccountBtn");
-  const cancelRegisterBtn = document.getElementById("cancelRegisterBtn");
+  const cancelRegisterBtn= document.getElementById("cancelRegisterBtn");
 
-  // Validação e ação de login
-  loginBtn.addEventListener("click", () => {
-    const username = usernameInput.value.trim();
-    const password = passwordInput.value.trim();
+  // ---------------------------
+  // Variáveis e inicializações
+  // ---------------------------
+  let registeredUsers = JSON.parse(localStorage.getItem("registeredUsers") || "{}");
+  // Se não houver usuários registrados, cria um usuário padrão
+  if (Object.keys(registeredUsers).length === 0) {
+    registeredUsers["usuario@exemplo.com"] = "Senha123";
+    localStorage.setItem("registeredUsers", JSON.stringify(registeredUsers));
+  }
 
-    if (registeredUsers[username] && registeredUsers[username] === password) {
-      // Login bem-sucedido
-      loginContainer.style.display = "none";
-      chatContainer.style.display = "flex";
-      loginError.textContent = "";
-    } else {
-      loginError.textContent = "Usuário ou senha incorretos!";
-    }
-  });
+  // ---------------------------
+  // Funções utilitárias
+  // ---------------------------
+  function isValidEmail(email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  }
+  function isValidPassword(password) {
+    const passwordRegex = /^(?=.*[A-Z])(?=.*\d).{10,}$/;
+    return passwordRegex.test(password);
+  }
 
-  // Alterna para o formulário de criação de conta
+  // ---------------------------
+  // Configuração dos event listeners
+  // ---------------------------
+  // Exibe o formulário de cadastro
   showRegisterBtn.addEventListener("click", () => {
     loginForm.style.display = "none";
     registerForm.style.display = "flex";
   });
 
-  // Cancela a criação e volta para o login
+  // Cancela o cadastro e volta para o formulário de login
   cancelRegisterBtn.addEventListener("click", () => {
     registerForm.style.display = "none";
     loginForm.style.display = "flex";
     registerError.textContent = "";
     registerEmail.value = "";
     registerPassword.value = "";
+    registerName.value = "";
   });
 
-  // Validação simples para email
-  function isValidEmail(email) {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  }
-
-  // Validação para senha: ao menos 10 caracteres, 1 dígito e 1 letra maiúscula
-  function isValidPassword(password) {
-    const passwordRegex = /^(?=.*[A-Z])(?=.*\d).{10,}$/;
-    return passwordRegex.test(password);
-  }
-
-  // Criação de nova conta
+  // Cria a conta do usuário, após validações
   createAccountBtn.addEventListener("click", () => {
-    const email = registerEmail.value.trim();
+    const name     = registerName.value.trim();
+    const email    = registerEmail.value.trim();
     const password = registerPassword.value.trim();
-
+    
     if (!isValidEmail(email)) {
       registerError.textContent = "Por favor, insira um email válido.";
       return;
     }
-
     if (!isValidPassword(password)) {
       registerError.textContent = "A senha deve ter pelo menos 10 caracteres, incluir números e uma letra maiúscula.";
       return;
     }
-
-    // Simula a criação de conta armazenando em registeredUsers
+    
     registeredUsers[email] = password;
+    localStorage.setItem("registeredUsers", JSON.stringify(registeredUsers));
     alert("Conta criada com sucesso!");
-
-    // Após criar a conta, volta para o formulário de login e preenche o campo com o email criado
+    
+    // Após cadastro, preenche o campo de login e volta para o formulário de login
+    usernameInput.value = email;
     registerForm.style.display = "none";
     loginForm.style.display = "flex";
-    usernameInput.value = email;
     registerError.textContent = "";
     registerEmail.value = "";
     registerPassword.value = "";
+    registerName.value = "";
   });
 
-  /* ------------------------------------------------
-     Lógica do Chat (mesmo da versão anterior)
-  ------------------------------------------------ */
-  const toggleArrow = document.getElementById("toggleArrow");
-  const sidebar = document.getElementById("sidebar");
-  const chatWindow = document.getElementById("chatWindow");
-  const messageInput = document.getElementById("messageInput");
-  const sendBtn = document.getElementById("sendBtn");
-  const historyList = document.getElementById("historyList");
-  const fileBtn = document.getElementById("fileBtn");
-  const fileInput = document.getElementById("fileInput");
-  const audioBtn = document.getElementById("audioBtn");
-
-  let conversations = [
-    {
-      id: "1",
-      messages: [
-        { text: "Olá, eu sou a SamsAI. Como posso te ajudar?", sender: "bot" }
-      ]
-    },
-    {
-      id: "2",
-      messages: [
-        { text: "Esta é a segunda conversa. Como posso te ajudar?", sender: "bot" }
-      ]
-    },
-    {
-      id: "3",
-      messages: [
-        { text: "Bem-vindo à conversa 3. Alguma dúvida?", sender: "bot" }
-      ]
+  // Efetua o login do usuário
+  loginBtn.addEventListener("click", () => {
+    const username = usernameInput.value.trim();
+    const password = passwordInput.value.trim();
+    if (registeredUsers[username] && registeredUsers[username] === password) {
+      window.location.href = "chat.html";
+    } else {
+      loginError.textContent = "Usuário ou senha incorretos!";
     }
-  ];
-
-  let currentConversationId = "1";
-  renderConversation(currentConversationId);
-
-  toggleArrow.addEventListener("click", () => {
-    sidebar.classList.toggle("collapsed");
-    toggleArrow.innerHTML = sidebar.classList.contains("collapsed") ? "&#9654;" : "&#9664;";
   });
+}
 
-  sendBtn.addEventListener("click", sendUserMessage);
+/* ====================================================
+   LÓGICA DA PÁGINA DO CHAT (chat.html)
+   ==================================================== */
+function initChatPage() {
+  // ---------------------------
+  // Variáveis e armazenamento
+  // ---------------------------
+  let conversations       = JSON.parse(localStorage.getItem("conversations") || "[]");
+  let conversationCounter = conversations.length;
+  
+  // ---------------------------
+  // Seleção dos elementos do DOM
+  // ---------------------------
+  const toggleArrow   = document.getElementById("toggleArrow");
+  const sidebar       = document.getElementById("sidebar");
+  const historyList   = document.getElementById("historyList");
+  const chatWindow    = document.getElementById("chatWindow");
+  const messageInput  = document.getElementById("messageInput");
+  const sendBtn       = document.getElementById("sendBtn");
+  const fileBtn       = document.getElementById("fileBtn");
+  const fileInput     = document.getElementById("fileInput");
+  const audioBtn      = document.getElementById("audioBtn");
+
+  const customModal   = document.getElementById("customModal");
+  const modalTitle    = document.getElementById("modalTitle");
+  const modalBody     = document.getElementById("modalBody");
+  const modalCancelBtn= document.getElementById("modalCancelBtn");
+  const modalConfirmBtn= document.getElementById("modalConfirmBtn");
+
+  const profileIcon   = document.getElementById("profileIcon");
+  const profileDropdown = document.getElementById("profileDropdown");
+  const logoutBtn     = document.getElementById("logoutBtn");
+  const configBtn     = document.getElementById("configBtn");
+  const configModal   = document.getElementById("configModal");
+  const closeModal    = document.getElementById("closeModal");
+  const configForm    = document.getElementById("configForm");
+
+  // Variáveis auxiliares para ações modais
+  let currentAction = null;
+  let currentConvId = null;
+
+  // ---------------------------
+  // Funções auxiliares
+  // ---------------------------
+  // Salva as conversas no localStorage
+  function saveConversations() {
+    localStorage.setItem("conversations", JSON.stringify(conversations));
+  }
+
+  // Renderiza a lista de conversas na barra lateral
+  function renderConversationsSidebar() {
+    historyList.innerHTML = "";
+    conversations.forEach(conv => {
+      // Cria o item da conversa
+      const li = document.createElement("li");
+      li.classList.add("conversation-item");
+      li.setAttribute("data-id", conv.id);
+      
+      // Título da conversa (com limite de caracteres)
+      const titleSpan = document.createElement("span");
+      titleSpan.classList.add("conversation-title");
+      titleSpan.textContent = conv.title || "Nova Conversa";
+      titleSpan.addEventListener("click", () => {
+        window.location.href = `conversation.html?conversationId=${conv.id}`;
+      });
+      
+      // Ícone de opções (representado por "...")
+      const optionsIcon = document.createElement("span");
+      optionsIcon.classList.add("options-icon");
+      optionsIcon.textContent = "...";
+      
+      // Evento de clique para exibir menu inline de opções
+      optionsIcon.addEventListener("click", (e) => {
+        e.stopPropagation();
+        // Fecha quaisquer pop-ups abertos
+        document.querySelectorAll(".inline-popup").forEach(el => el.remove());
+        
+        // Cria o menu inline
+        const popup = document.createElement("div");
+        popup.classList.add("inline-popup");
+        
+        const renameBtn = document.createElement("button");
+        renameBtn.textContent = "Renomear";
+        const deleteBtn = document.createElement("button");
+        deleteBtn.textContent = "Apagar";
+        
+        popup.appendChild(renameBtn);
+        popup.appendChild(deleteBtn);
+        optionsIcon.appendChild(popup);
+        
+        // Evita que cliques dentro do pop-up fechem o menu
+        popup.addEventListener("click", (ev) => ev.stopPropagation());
+        
+        // Ação de renomear: substitui o título por um input para edição
+        renameBtn.addEventListener("click", (ev) => {
+          ev.stopPropagation();
+          popup.remove();
+          const input = document.createElement("input");
+          input.type = "text";
+          input.value = conv.title;
+          input.classList.add("conversation-title-edit");
+          li.replaceChild(input, titleSpan);
+          input.focus();
+          
+          const finishEdit = () => {
+            if (input.value.trim() !== "") {
+              conv.title = input.value.trim();
+            }
+            titleSpan.textContent = conv.title;
+            li.replaceChild(titleSpan, input);
+            saveConversations();
+          };
+          input.addEventListener("blur", finishEdit);
+          input.addEventListener("keydown", (keyEv) => {
+            if (keyEv.key === "Enter") {
+              input.blur();
+            } else if (keyEv.key === "Escape") {
+              input.value = conv.title;
+              input.blur();
+            }
+          });
+        });
+        
+        // Ação de apagar: chama a modal de confirmação (versão inline)
+        deleteBtn.addEventListener("click", (ev) => {
+          ev.stopPropagation();
+          popup.remove();
+          showDeleteModalInline(conv);
+        });
+      });
+      
+      // Fecha pop-ups se clicar fora
+      document.addEventListener("click", () => {
+        document.querySelectorAll(".inline-popup").forEach(el => el.remove());
+      });
+      
+      li.appendChild(titleSpan);
+      li.appendChild(optionsIcon);
+      historyList.appendChild(li);
+    });
+  }
+
+  // Modal inline para exclusão de conversa (usando elementos do deleteModal)
+  function showDeleteModalInline(conv) {
+    const deleteModal      = document.getElementById("deleteModal");
+    const deleteModalTitle = document.getElementById("deleteModalTitle");
+    const deleteModalBody  = document.getElementById("deleteModalBody");
+    const deleteCancelBtn  = document.getElementById("deleteCancelBtn");
+    const deleteConfirmBtn = document.getElementById("deleteConfirmBtn");
+
+    deleteModalTitle.textContent = "Apagar Conversa";
+    deleteModalBody.textContent  = `Deseja mesmo apagar a conversa "${conv.title}"?`;
+    deleteModal.style.display = "flex";
+    
+    deleteCancelBtn.onclick = function() {
+      deleteModal.style.display = "none";
+    };
+    
+    deleteConfirmBtn.onclick = function() {
+      conversations = conversations.filter(c => c.id !== conv.id);
+      saveConversations();
+      renderConversationsSidebar();
+      deleteModal.style.display = "none";
+    };
+  }
+
+  // Modal customizado para opções de conversa
+  function showCustomModal(conv) {
+    modalTitle.textContent = "Opções da Conversa";
+    modalBody.innerHTML = `
+      <button id="renameBtn" class="modal-option">Renomear</button>
+      <button id="deleteBtn" class="modal-option">Apagar</button>
+    `;
+    customModal.style.display = "flex";
+    
+    document.getElementById("renameBtn").addEventListener("click", () => {
+      customModal.style.display = "none";
+      showRenameModal(conv);
+    });
+    document.getElementById("deleteBtn").addEventListener("click", () => {
+      customModal.style.display = "none";
+      showDeleteModalCustom(conv);
+    });
+  }
+
+  // Modal para renomear conversa
+  function showRenameModal(conv) {
+    modalTitle.textContent = "Renomear Conversa";
+    modalBody.innerHTML = `<input type="text" id="newNameInput" value="${conv.title}">`;
+    customModal.style.display = "flex";
+    currentAction = "rename";
+    currentConvId = conv.id;
+  }
+
+  // Modal customizado para exclusão de conversa
+  function showDeleteModalCustom(conv) {
+    modalTitle.textContent = "Apagar Conversa";
+    modalBody.innerHTML = `<p>Deseja realmente apagar a conversa "${conv.title}"?</p>`;
+    customModal.style.display = "flex";
+    currentAction = "delete";
+    currentConvId = conv.id;
+  }
+
+  // ---------------------------
+  // Eventos dos botões e inputs
+  // ---------------------------
+  // Envio de mensagem: cria nova conversa e redireciona para ela
+  sendBtn.addEventListener("click", () => {
+    const messageText = messageInput.value.trim();
+    if (messageText === "") return;
+    
+    conversationCounter++;
+    // Limita o título a 20 caracteres (acrescenta "..." se maior)
+    const title = messageText.length > 20 ? messageText.substring(0,20) + "..." : (messageText || "Nova Conversa");
+    const newConv = {
+      id: conversationCounter.toString(),
+      title: title,
+      messages: [{ text: messageText, sender: "user" }]
+    };
+    conversations.push(newConv);
+    // Simula resposta do bot
+    newConv.messages.push({ text: "Olá! Como posso ajudar?", sender: "bot" });
+    saveConversations();
+    renderConversationsSidebar();
+    window.location.href = `conversation.html?conversationId=${newConv.id}`;
+  });
+  
+  // Permite envio com a tecla Enter
   messageInput.addEventListener("keypress", (e) => {
-    if (e.key === "Enter") sendUserMessage();
-  });
-
-  historyList.addEventListener("click", (e) => {
-    if (e.target && e.target.nodeName === "LI") {
-      const conversationId = e.target.getAttribute("data-id");
-      if (conversationId) {
-        currentConversationId = conversationId;
-        renderConversation(currentConversationId);
-      }
+    if (e.key === "Enter") {
+      e.preventDefault();
+      sendBtn.click();
     }
   });
-
+  
+  // Simulação de envio de arquivo
   fileBtn.addEventListener("click", () => {
     fileInput.click();
   });
-
   fileInput.addEventListener("change", () => {
     if (fileInput.files.length > 0) {
-      const file = fileInput.files[0];
-      addMessageToConversation(`Arquivo selecionado: ${file.name}`, "user");
+      alert("Simulação: arquivo selecionado (" + fileInput.files[0].name + ").");
       fileInput.value = "";
-      botAutoResponse();
     }
   });
-
+  
+  // Simulação de envio de áudio
   audioBtn.addEventListener("click", () => {
-    addMessageToConversation("Áudio enviado (simulação).", "user");
-    botAutoResponse();
+    alert("Simulação: áudio enviado.");
   });
-
-  function sendUserMessage() {
-    const message = messageInput.value.trim();
-    if (message !== "") {
-      addMessageToConversation(message, "user");
-      messageInput.value = "";
-      botAutoResponse();
-    }
-  }
-
-  function addMessageToConversation(text, sender) {
-    const conversation = conversations.find(conv => conv.id === currentConversationId);
-    if (conversation) {
-      conversation.messages.push({ text, sender });
-      renderConversation(currentConversationId);
-    }
-  }
-
-  function renderConversation(conversationId) {
-    chatWindow.innerHTML = "";
-    const conversation = conversations.find(conv => conv.id === conversationId);
-    if (conversation) {
-      conversation.messages.forEach(msg => {
-        const messageElement = document.createElement("div");
-        messageElement.classList.add("message", msg.sender);
-        messageElement.textContent = msg.text;
-        chatWindow.appendChild(messageElement);
-      });
-      chatWindow.scrollTop = chatWindow.scrollHeight;
-    }
-  }
-
-  function botAutoResponse() {
-    setTimeout(() => {
-      addMessageToConversation("Estou aqui para ajudar!", "bot");
-    }, 500);
-  }
-
-  /* ------------------------------------------------
-     Perfil e Configurações (mesma lógica da versão anterior)
-  ------------------------------------------------ */
-  const profileIcon = document.getElementById("profileIcon");
-  const profileDropdown = document.getElementById("profileDropdown");
-  const logoutBtn = document.getElementById("logoutBtn");
-  const configBtn = document.getElementById("configBtn");
-
+  
+  // Menu de perfil
   profileIcon.addEventListener("click", (e) => {
     profileDropdown.style.display = profileDropdown.style.display === "block" ? "none" : "block";
     e.stopPropagation();
   });
-
   window.addEventListener("click", (e) => {
     if (!profileIcon.contains(e.target) && !profileDropdown.contains(e.target)) {
       profileDropdown.style.display = "none";
     }
   });
-
+  
+  // Logout
   logoutBtn.addEventListener("click", () => {
-    chatContainer.style.display = "none";
-    loginContainer.style.display = "flex";
-    profileDropdown.style.display = "none";
+    window.location.href = "loginscreen.html";
   });
-
-  const configModal = document.getElementById("configModal");
-  const closeModal = document.getElementById("closeModal");
-  const configForm = document.getElementById("configForm");
-
+  
+  // Configurações
   configBtn.addEventListener("click", () => {
-    configModal.style.display = "block";
+    configModal.style.display = "flex";
     profileDropdown.style.display = "none";
   });
-
   closeModal.addEventListener("click", () => {
     configModal.style.display = "none";
   });
-
   configForm.addEventListener("submit", (e) => {
     e.preventDefault();
-    const theme = document.querySelector('input[name="theme"]:checked').value;
-    const fontSize = document.getElementById("fontSizeSelect").value;
+    const theme      = document.querySelector('input[name="theme"]:checked').value;
+    const fontSize   = document.getElementById("fontSizeSelect").value;
     const fontFamily = document.getElementById("fontFamilySelect").value;
     
     if (theme === "light") {
@@ -261,10 +399,131 @@ document.addEventListener("DOMContentLoaded", () => {
     } else {
       document.body.classList.remove("light-theme");
     }
-    
-    document.body.style.fontSize = fontSize;
+    document.body.style.fontSize   = fontSize;
     document.body.style.fontFamily = fontFamily;
-    
     configModal.style.display = "none";
   });
-});
+
+  // Renderiza a lista de conversas ao carregar a página
+  renderConversationsSidebar();
+}
+
+/* ====================================================
+   LÓGICA DA PÁGINA DE CONVERSA (conversation.html)
+   ==================================================== */
+function initConversationPage() {
+  // ---------------------------
+  // Funções de carregamento e salvamento das conversas
+  // ---------------------------
+  function loadConversations() {
+    return JSON.parse(localStorage.getItem("conversations") || "[]");
+  }
+  function saveConversations(conversations) {
+    localStorage.setItem("conversations", JSON.stringify(conversations));
+  }
+
+  // ---------------------------
+  // Obtenção dos parâmetros da URL e seleção da conversa atual
+  // ---------------------------
+  const urlParams      = new URLSearchParams(window.location.search);
+  const conversationId = urlParams.get("conversationId");
+  let conversations    = loadConversations();
+  const currentConversation = conversations.find(conv => conv.id === conversationId);
+
+  // ---------------------------
+  // Seleção dos elementos do DOM
+  // ---------------------------
+  const chatWindow       = document.getElementById("chatWindow");
+  const messageInput     = document.getElementById("messageInput");
+  const sendBtn          = document.getElementById("sendBtn");
+  const fileBtn          = document.getElementById("fileBtn");
+  const fileInput        = document.getElementById("fileInput");
+  const audioBtn         = document.getElementById("audioBtn");
+  const conversationTitle= document.getElementById("conversationTitle");
+
+  // Se a conversa não for encontrada, exibe mensagem de erro
+  if (!currentConversation) {
+    chatWindow.innerHTML = "<p class='error'>Conversa não encontrada.</p>";
+    return;
+  }
+  conversationTitle.textContent = currentConversation.title;
+
+  // ---------------------------
+  // Função para renderizar as mensagens da conversa
+  // ---------------------------
+  function renderMessages() {
+    chatWindow.innerHTML = "";
+    currentConversation.messages.forEach(msg => {
+      const msgDiv = document.createElement("div");
+      msgDiv.classList.add("message", msg.sender);
+      msgDiv.textContent = msg.text;
+      chatWindow.appendChild(msgDiv);
+    });
+    chatWindow.scrollTop = chatWindow.scrollHeight;
+  }
+
+  // ---------------------------
+  // Configuração dos eventos de envio de mensagem
+  // ---------------------------
+  sendBtn.addEventListener("click", () => {
+    const messageText = messageInput.value.trim();
+    if (messageText === "") return;
+    
+    // Adiciona mensagem do usuário e salva
+    currentConversation.messages.push({ text: messageText, sender: "user" });
+    saveConversations(conversations);
+    renderMessages();
+    messageInput.value = "";
+    messageInput.style.height = "auto";
+    
+    // Simula resposta do bot após 500ms
+    setTimeout(() => {
+      currentConversation.messages.push({ text: "Estou aqui para ajudar!", sender: "bot" });
+      saveConversations(conversations);
+      renderMessages();
+    }, 500);
+  });
+  
+  // Envio com Enter (sem Shift)
+  messageInput.addEventListener("keypress", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendBtn.click();
+    }
+  });
+  
+  // Simulação de envio de arquivo
+  fileBtn.addEventListener("click", () => {
+    fileInput.click();
+  });
+  fileInput.addEventListener("change", () => {
+    if (fileInput.files.length > 0) {
+      const file = fileInput.files[0];
+      currentConversation.messages.push({ text: "Arquivo enviado: " + file.name, sender: "user" });
+      saveConversations(conversations);
+      renderMessages();
+      fileInput.value = "";
+      // Resposta simulada do bot
+      setTimeout(() => {
+        currentConversation.messages.push({ text: "Arquivo recebido. Em breve responderei!", sender: "bot" });
+        saveConversations(conversations);
+        renderMessages();
+      }, 500);
+    }
+  });
+  
+  // Simulação de envio de áudio
+  audioBtn.addEventListener("click", () => {
+    currentConversation.messages.push({ text: "Áudio enviado (simulação).", sender: "user" });
+    saveConversations(conversations);
+    renderMessages();
+    setTimeout(() => {
+      currentConversation.messages.push({ text: "Áudio recebido. Vou processar a informação!", sender: "bot" });
+      saveConversations(conversations);
+      renderMessages();
+    }, 500);
+  });
+  
+  // Renderiza as mensagens ao carregar a página
+  renderMessages();
+}
