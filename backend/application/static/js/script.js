@@ -105,9 +105,7 @@ function initLoginPage() {
   loginBtn.addEventListener("click", () => {
     const username = usernameInput.value.trim();
     const password = passwordInput.value.trim();
-    if (registeredUsers[username] && registeredUsers[username] === password) {
-      window.location.href = "chat.html";
-    } else {
+    if (!(registeredUsers[username] && registeredUsers[username] === password)) {
       loginError.textContent = "Usuário ou senha incorretos!";
     }
   });
@@ -175,9 +173,6 @@ function initChatPage() {
       const titleSpan = document.createElement("span");
       titleSpan.classList.add("conversation-title");
       titleSpan.textContent = conv.title || "Nova Conversa";
-      titleSpan.addEventListener("click", () => {
-        window.location.href = `conversation.html?conversationId=${conv.id}`;
-      });
       
       // Ícone de opções (representado por "...")
       const optionsIcon = document.createElement("span");
@@ -337,7 +332,7 @@ function initChatPage() {
     newConv.messages.push({ text: "Olá! Como posso ajudar?", sender: "bot" });
     saveConversations();
     renderConversationsSidebar();
-    window.location.href = `conversation.html?conversationId=${newConv.id}`;
+    
   });
   
   // Permite envio com a tecla Enter
@@ -375,10 +370,6 @@ function initChatPage() {
     }
   });
   
-  // Logout
-  logoutBtn.addEventListener("click", () => {
-    window.location.href = "loginscreen.html";
-  });
   
   // Configurações
   configBtn.addEventListener("click", () => {

@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+  {% load static %}
   <meta charset="UTF-8" />
   <title>SAMSAI - Chat</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
 <body>
   <div id="chatContainer" class="chat-container">
@@ -26,15 +27,16 @@
         </div>
       </div>
       <div class="chat-window" id="chatWindow">
-        <p>Digite sua mensagem para iniciar uma nova conversa.</p>
+        <p>Olá, {{ usuario }}. Digite sua mensagem para iniciar uma nova conversa.</p>
       </div>
-      <div class="chat-input">
+      <form method="post" action="{% url 'new_chat' %}" class="chat-input">
+        {% csrf_token %}
         <button id="fileBtn" class="btn-file">📎</button>
         <input type="file" id="fileInput" style="display:none;">
-        <input type="text" id="messageInput" placeholder="Digite sua mensagem...">
+        <input name="mensagem_usuario" type="text" id="messageInput" placeholder="Digite sua mensagem...">
         <button id="audioBtn" class="btn-audio">🎤</button>
         <button id="sendBtn" class="btn-send">Enviar</button>
-      </div>
+      </form>
     </div>
   </div>
   
@@ -105,6 +107,6 @@
     </div>
   </div>
   
-  <script src="script.js"></script>
+  <script src="{% static 'js/script.js' %}"></script>
 </body>
 </html>

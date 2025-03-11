@@ -77,6 +77,28 @@ body {
   font-size: 0.9rem;
 }
 
+.messages{
+  font-family: 'Arial', sans-serif;
+  font-weight: medium;
+  font-size: 20px;
+  color: #FFF;
+  margin-bottom: 10px;
+  width: 1000px;
+  text-align: center;
+}
+
+.messages > .alert.alert-error{
+  background-color: #ff6666;
+  padding-bottom: 10px;
+  padding-top: 10px;
+}
+
+.messages > .alert.alert-success{
+  background-color: rgb(80, 255, 101);
+  padding-bottom: 10px;
+  padding-top: 10px;
+}
+
 .link-btn {
   background: none;
   border: none;
