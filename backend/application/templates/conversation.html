@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Conversa - SAMSAI</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="conversation-container">
+    <div class="chat-header">
+      <h1 id="conversationTitle">Conversa</h1>
+      <button onclick="window.location.href='chat.html'">Voltar ao Chat</button>
+    </div>
+    <div class="chat-window" id="chatWindow">
+      <!-- Mensagens serão renderizadas aqui -->
+    </div>
+    <div class="chat-input">
+      <button id="fileBtn" class="btn-file">📎</button>
+      <input type="file" id="fileInput" style="display:none;">
+      <textarea id="messageInput" class="chat-textarea" placeholder="Digite sua mensagem..."></textarea>
+      <button id="audioBtn" class="btn-audio">🎤</button>
+      <button id="sendBtn" class="btn-send">Enviar</button>
+    </div>
+  </div>
+  
+  <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>SAMSAI - Chat</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="chatContainer" class="chat-container">
+    <div class="sidebar" id="sidebar">
+      <h2>Histórico de Conversas</h2>
+      <ul id="historyList">
+        <!-- Lista de conversas gerada dinamicamente -->
+      </ul>
+    </div>
+    
+    <div class="chat-section" id="chatSection">
+      <div class="chat-header">
+        <h1>SamsAI</h1>
+        <div class="profile-container">
+          <span id="profileIcon" class="profile-icon">👤</span>
+          <div id="profileDropdown" class="profile-dropdown">
+            <button id="logoutBtn" class="profile-btn">Sair</button>
+            <button id="configBtn" class="profile-btn">Configurações</button>
+          </div>
+        </div>
+      </div>
+      <div class="chat-window" id="chatWindow">
+        <p>Digite sua mensagem para iniciar uma nova conversa.</p>
+      </div>
+      <div class="chat-input">
+        <button id="fileBtn" class="btn-file">📎</button>
+        <input type="file" id="fileInput" style="display:none;">
+        <input type="text" id="messageInput" placeholder="Digite sua mensagem...">
+        <button id="audioBtn" class="btn-audio">🎤</button>
+        <button id="sendBtn" class="btn-send">Enviar</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Modal customizado para opções de conversa (renomear/apagar) -->
+  <div id="customModal" class="modal">
+    <div class="modal-content">
+      <h2 id="modalTitle">Opções da Conversa</h2>
+      <div id="modalBody">
+        <!-- Conteúdo dinâmico (será inserido via JavaScript) -->
+      </div>
+      <div class="modal-actions">
+        <button id="modalCancelBtn">Cancelar</button>
+        <button id="modalConfirmBtn">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Popup de Confirmação para Apagar Conversa (centralizado) -->
+  <div id="deleteModal" class="modal">
+    <div class="modal-content">
+      <h2 id="deleteModalTitle">Apagar Conversa</h2>
+      <p id="deleteModalBody"></p>
+      <div class="modal-actions">
+        <button id="deleteCancelBtn">Cancelar</button>
+        <button id="deleteConfirmBtn">Apagar</button>
+      </div>
+    </div>
+  </div>
+
+  
+  <!-- Modal de Configurações -->
+  <div id="configModal" class="modal">
+    <div class="modal-content">
+      <span id="closeModal" class="close-button">&times;</span>
+      <h2>Configurações</h2>
+      <form id="configForm">
+        <div class="config-section">
+          <label>Escolha o tema:</label>
+          <div>
+            <input type="radio" id="darkTheme" name="theme" value="dark" checked>
+            <label for="darkTheme">Escuro</label>
+          </div>
+          <div>
+            <input type="radio" id="lightTheme" name="theme" value="light">
+            <label for="lightTheme">Claro</label>
+          </div>
+        </div>
+        <div class="config-section">
+          <label for="fontSizeSelect">Tamanho da fonte:</label>
+          <select id="fontSizeSelect">
+            <option value="14px">Pequeno</option>
+            <option value="16px" selected>Médio</option>
+            <option value="18px">Grande</option>
+            <option value="20px">Extra Grande</option>
+          </select>
+        </div>
+        <div class="config-section">
+          <label for="fontFamilySelect">Fonte:</label>
+          <select id="fontFamilySelect">
+            <option value="Arial" selected>Arial</option>
+            <option value="Verdana">Verdana</option>
+            <option value="Times New Roman">Times New Roman</option>
+            <option value="Courier New">Courier New</option>
+          </select>
+        </div>
+        <button type="submit" class="config-save-btn">Salvar</button>
+      </form>
+    </div>
+  </div>
+  
+  <script src="script.js"></script>
+</body>
+</html>
