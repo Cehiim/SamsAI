@@ -89,7 +89,7 @@ class NewChatBotView(LoginRequiredMixin, View):
         todas_as_conversas = Conversa.objects.filter(usuario=usuario).order_by('-data')
         context = {
             "usuario": usuario,
-            "conversas": todas_as_conversas
+            "todas_as_conversas": todas_as_conversas
         }
         return render(request, "chat.html", context)
     

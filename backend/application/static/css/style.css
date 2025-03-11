@@ -527,6 +527,8 @@ body.light-theme .login-container {
   text-overflow: ellipsis;
   white-space: nowrap;
   vertical-align: middle;
+  color: #fff;
+  text-decoration: none;
 }
 
 /* Estilo para o input quando editando o nome da conversa */

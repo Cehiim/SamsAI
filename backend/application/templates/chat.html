@@ -10,8 +10,13 @@
   <div id="chatContainer" class="chat-container">
     <div class="sidebar" id="sidebar">
       <h2>Histórico de Conversas</h2>
-      <ul id="historyList">
-        <!-- Lista de conversas gerada dinamicamente -->
+      <ul>
+        {% for t in todas_as_conversas %}
+          <li class="conversation-item">
+            <a class="conversation-title" href="{% url 'chat' t.pk %}">{{ t.nome }}</a>
+            <span class="options-icon">...</span>
+          </li>
+        {% endfor %}
       </ul>
     </div>
     
