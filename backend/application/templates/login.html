@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>SAMSAI - Login</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="loginContainer" class="login-container">
+    <div class="login-box">
+      <h1>SAMSAI</h1>
+      <!-- Formulário de Login -->
+      <div id="loginForm" class="login-form">
+        <input type="text" id="usernameInput" placeholder="Email">
+        <input type="password" id="passwordInput" placeholder="Senha">
+        <button id="loginBtn">Entrar</button>
+        <p id="loginError" class="error-message"></p>
+        <button id="showRegisterBtn" class="link-btn">Criar Conta</button>
+      </div>
+      <!-- Formulário de Criação de Conta -->
+      <div id="registerForm" class="register-form" style="display: none;">
+        <input type="text" id="registerName" placeholder="Nome">
+        <input type="email" id="registerEmail" placeholder="Email">
+        <input type="password" id="registerPassword" placeholder="Senha">
+        <p id="registerError" class="error-message"></p>
+        <button id="createAccountBtn">Criar Conta</button>
+        <button id="cancelRegisterBtn" class="link-btn">Cancelar</button>
+      </div>
+    </div>
+  </div>
+  
+  <script src="script.js"></script>
+</body>
+</html>

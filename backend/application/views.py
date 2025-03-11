@@ -20,7 +20,7 @@ class LoginView(View):
         context = {
             "usuarios": usuarios
         }
-        return render(request, 'login.html', context)
+        return render(request, 'index.html', context)
 
     def post(self, request):
         if request.user.is_authenticated:
@@ -40,7 +40,7 @@ class LoginView(View):
         except Exception as e:
             messages.error(request, "email ou senha incorretos")
         
-        return render(request, "login.html")
+        return render(request, "index.html")
 
 class CadastroView(View):
     def get(self, request):
