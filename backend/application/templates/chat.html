@@ -19,14 +19,32 @@
         {% endfor %}
       </ul>
     </div>
+    <!--
+    Chat de Mensagens:
+    <div>
+        <ul>
+        {% for m in mensagens %}
+            {% if m.eh_do_usuario is True %}
+                <li class="user_msg">
+                    m.texto #"Conteúdo da mensagem do usuário" Pode ter outras tags dentro de li se necessário           
+                </li>
+            {% else %}
+                <li class="ai_msg">
+                    m.texto #"Conteúdo da mensagem da IA" Pode ter outras tags dentro de li se necessário
+                </li>
+            {% endif %}
+        {% endfor %}   
+        </ul>
+    </div>
+    -->
     
     <div class="chat-section" id="chatSection">
       <div class="chat-header">
         <h1>SamsAI</h1>
         <div class="profile-container">
           <span id="profileIcon" class="profile-icon">👤</span>
-          <div id="profileDropdown" class="profile-dropdown">
-            <button id="logoutBtn" class="profile-btn">Sair</button>
+          <div id="profileDropdown" class="profile-dropdown"> 
+            <a id="logoutBtn" href="{% url 'logout' %}" class="profile-btn">Sair</a>
             <button id="configBtn" class="profile-btn">Configurações</button>
           </div>
         </div>
@@ -34,14 +52,25 @@
       <div class="chat-window" id="chatWindow">
         <p>Olá, {{ usuario }}. Digite sua mensagem para iniciar uma nova conversa.</p>
       </div>
-      <form method="post" action="{% url 'new_chat' %}" class="chat-input">
-        {% csrf_token %}
-        <button id="fileBtn" class="btn-file">📎</button>
-        <input type="file" id="fileInput" style="display:none;">
-        <input name="mensagem_usuario" type="text" id="messageInput" placeholder="Digite sua mensagem...">
-        <button id="audioBtn" class="btn-audio">🎤</button>
-        <button id="sendBtn" class="btn-send">Enviar</button>
-      </form>
+        {% if conversa_id is None %}
+            <form method="post" action="{% url 'new_chat' %}" class="chat-input">
+              {% csrf_token %}
+              <button id="fileBtn" class="btn-file">📎</button>
+              <input type="file" id="fileInput" style="display:none;">
+              <input name="mensagem_usuario" type="text" id="messageInput" placeholder="Digite sua mensagem...">
+              <button id="audioBtn" class="btn-audio">🎤</button>
+              <button id="sendBtn" class="btn-send">Enviar</button>
+            </form>
+        {% else %}
+            <form method="post" action="{% url 'chat' conversa_id %}" class="chat-input">
+              {% csrf_token %}
+              <button id="fileBtn" class="btn-file">📎</button>
+              <input type="file" id="fileInput" style="display:none;">
+              <input name="mensagem_usuario" type="text" id="messageInput" placeholder="Digite sua mensagem...">
+              <button id="audioBtn" class="btn-audio">🎤</button>
+              <button id="sendBtn" class="btn-send">Enviar</button>
+            </form>
+        {% endif %}
     </div>
   </div>
   

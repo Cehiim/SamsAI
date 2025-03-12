@@ -218,17 +218,31 @@ body {
   z-index: 1000;
 }
 
-.profile-dropdown button {
+button.profile-btn {
   background: none;
   border: none;
   color: #fff;
   padding: 10px;
   width: 100%;
-  text-align: left;
+  text-align: center;
   cursor: pointer;
+  text-decoration: none;
 }
 
-.profile-dropdown button:hover {
+a.profile-btn {
+  display: block;
+  background: none;
+  border: none;
+  color: #fff;
+  padding: 10px;
+  width: 100%;
+  text-align: center;
+  cursor: pointer;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+button:hover.profile-btn, a:hover.profile-btn {
   background-color: #555;
 }
 

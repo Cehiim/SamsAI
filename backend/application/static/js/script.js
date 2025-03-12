@@ -142,7 +142,6 @@ function initChatPage() {
 
   const profileIcon   = document.getElementById("profileIcon");
   const profileDropdown = document.getElementById("profileDropdown");
-  const logoutBtn     = document.getElementById("logoutBtn");
   const configBtn     = document.getElementById("configBtn");
   const configModal   = document.getElementById("configModal");
   const closeModal    = document.getElementById("closeModal");

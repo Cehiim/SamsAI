@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 from django.views import View
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -41,6 +41,12 @@ class LoginView(View):
             messages.error(request, "email ou senha incorretos")
         
         return render(request, "login.html")
+    
+class LogoutView(LoginRequiredMixin, View):
+    def get(self, request):
+        if request.user.is_authenticated:
+            logout(request)
+        return HttpResponseRedirect(reverse("login"))
 
 class CadastroView(View):
     def get(self, request):
@@ -53,7 +59,7 @@ class CadastroView(View):
             senha1 = request.POST.get("senha1")
             senha2 = request.POST.get("senha2")
 
-            ###Elaborar métodos de validação melhores nas views no front###
+            ###TODO: Elaborar métodos de validação melhores nas views no front###
             if username != "" and email != "" and senha1 == senha2: 
                 novo_usuario = User(username=username, email=email)
                 novo_usuario.set_password(senha1)
@@ -77,10 +83,20 @@ class ChatBotView(LoginRequiredMixin, View):
             "usuario": usuario,
             "mensagens": mensagens,
             "conversa_atual": conversa_atual,
+            "conversa_id": conversa_id,
             "todas_as_conversas": todas_as_conversas
         }
-
+        print("fui ativado conversa existente")
         return render(request, 'chat.html', context)
+    
+    def post(self, request, conversa_id): # TODO: (AJAX) Arranjar um jeito melhor de renderizar as conversas
+        conversa_atual = Conversa.objects.get(pk=conversa_id)
+        conteudo_mensagem = request.POST.get("mensagem_usuario") #extrai conteúdo da mensagem
+
+        nova_mensagem = Mensagem(conversa=conversa_atual, texto=conteudo_mensagem) #Cria nova mensagem
+        nova_mensagem.save()
+        
+        return redirect('chat', conversa_id=conversa_id)
 
 
 class NewChatBotView(LoginRequiredMixin, View):
@@ -89,24 +105,38 @@ class NewChatBotView(LoginRequiredMixin, View):
         todas_as_conversas = Conversa.objects.filter(usuario=usuario).order_by('-data')
         context = {
             "usuario": usuario,
-            "todas_as_conversas": todas_as_conversas
+            "todas_as_conversas": todas_as_conversas,
+            "conversa_id": None
         }
         return render(request, "chat.html", context)
     
     def post(self, request):
         usuario = User.objects.get(pk=request.user.pk)
         conteudo_mensagem = request.POST.get("mensagem_usuario") #extrai conteúdo da mensagem
+        print(conteudo_mensagem)
+        if len(conteudo_mensagem) >= 1:
+            if len(conteudo_mensagem) > 20:
+                nome_conversa = conteudo_mensagem[:20] + "..."
+            else:
+                nome_conversa = conteudo_mensagem
+            
+            nova_conversa = Conversa(usuario=usuario, nome=nome_conversa) #Cria nova conversa
+            nova_conversa.save()
+            nova_mensagem = Mensagem(conversa=nova_conversa, texto=conteudo_mensagem) #Cria nova mensagem
+            nova_mensagem.save()
+            print("fui ativado conversa nova")
+            return HttpResponseRedirect(reverse("chat", args=[nova_conversa.pk]))
 
-        if len(conteudo_mensagem) > 20:
-            nome_conversa = conteudo_mensagem[:20] + "..."
-        else:
-            nome_conversa = conteudo_mensagem
-
-        nova_conversa = Conversa(usuario=usuario, nome=nome_conversa) #Cria nova conversa
-        nova_conversa.save()
-        nova_mensagem = Mensagem(conversa=nova_conversa, texto=conteudo_mensagem) #Cria nova mensagem
-        nova_mensagem.save()
-
-        return HttpResponseRedirect(reverse("chat", args=[nova_conversa.pk]))
+        else: #TODO: Botão de enviar no front fica inativo quando o tamanho da mensagem é menor que 1 caractere
+            todas_as_conversas = Conversa.objects.filter(usuario=usuario).order_by('-data')
+            context = {
+                "usuario": usuario,
+                "todas_as_conversas": todas_as_conversas,
+                "conversa_id": None
+            }
+            return render(request, 'chat.html', context)
+            
+        
+        
     
     
