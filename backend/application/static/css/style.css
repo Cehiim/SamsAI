@@ -77,6 +77,28 @@ body {
   font-size: 0.9rem;
 }
 
+.messages{
+  font-family: 'Arial', sans-serif;
+  font-weight: medium;
+  font-size: 20px;
+  color: #FFF;
+  margin-bottom: 10px;
+  width: 1000px;
+  text-align: center;
+}
+
+.messages > .alert.alert-error{
+  background-color: #ff6666;
+  padding-bottom: 10px;
+  padding-top: 10px;
+}
+
+.messages > .alert.alert-success{
+  background-color: rgb(80, 255, 101);
+  padding-bottom: 10px;
+  padding-top: 10px;
+}
+
 .link-btn {
   background: none;
   border: none;
@@ -196,17 +218,31 @@ body {
   z-index: 1000;
 }
 
-.profile-dropdown button {
+button.profile-btn {
   background: none;
   border: none;
   color: #fff;
   padding: 10px;
   width: 100%;
-  text-align: left;
+  text-align: center;
   cursor: pointer;
+  text-decoration: none;
 }
 
-.profile-dropdown button:hover {
+a.profile-btn {
+  display: block;
+  background: none;
+  border: none;
+  color: #fff;
+  padding: 10px;
+  width: 100%;
+  text-align: center;
+  cursor: pointer;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+button:hover.profile-btn, a:hover.profile-btn {
   background-color: #555;
 }
 
@@ -505,6 +541,8 @@ body.light-theme .login-container {
   text-overflow: ellipsis;
   white-space: nowrap;
   vertical-align: middle;
+  color: #fff;
+  text-decoration: none;
 }
 
 /* Estilo para o input quando editando o nome da conversa */

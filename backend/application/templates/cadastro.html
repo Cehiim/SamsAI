@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+    <!-- Formulário de Cadastro -->
+    <form id="registerForm" class="register-form" method="post" action="{% url 'cadastro' %}">
+        {% csrf_token %}
+        <input name="nome" type="text" id="registerName" placeholder="Nome">
+        <input name="email" type="email" id="registerEmail" placeholder="Email">
+        <input name="senha1" type="password" id="registerPassword1" placeholder="Crie uma senha">
+        <input name="senha2" type="password" id="registerPassword2" placeholder="Digite novamente a senha">
+        <p id="registerError" class="error-message"></p>
+        <button id="createAccountBtn">Criar Conta</button>
+    </form>
+{% endblock %}
