@@ -152,6 +152,26 @@ class NewChatBotView(LoginRequiredMixin, View):
             return render(request, 'chat.html', context)
             
 class RenameView(LoginRequiredMixin, View):
-    def post(self, request):
+    def post(self, request, conversa_id):
+        try:
+            data = json.loads(request.body)
+            conversa = Conversa.objects.get(pk=conversa_id)
+            conversa.nome = data.get("nome", conversa.nome)
+            conversa.save()
+
+            return JsonResponse({"message": "Conversa renomeada com sucesso!"}, status=200)
+
+        except Conversa.DoesNotExist:
+            return JsonResponse({"success": False, "error": "Conversa não encontrada"}, status=404)
+        
+        except Exception as e:
+            return JsonResponse({"success": False, "error": str(e)}, status=500)
+        
+        except:
+            return JsonResponse({"success": False, "error": "Método não permitido"}, status=405)
+
+class DeleteView(LoginRequiredMixin, View):
+    def post(self, request, conversa_id):
         pass
+            
     

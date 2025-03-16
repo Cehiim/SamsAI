@@ -170,6 +170,10 @@ function initChatPage() {
   }
   */
 
+  function getCSRFToken() {
+    return document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+  }
+
   // Renderiza a lista de conversas na barra lateral
   function renderConversationsSidebar() {
     historyList.innerHTML = "";
@@ -234,7 +238,7 @@ function initChatPage() {
               conv.fields.nome = input.value.trim();
           
               // Enviar atualização para o back-end via Fetch API (AJAX)
-              fetch(`/chat/editar-conversa/${conv.pk}/`, {
+              fetch(`/rename/${conv.pk}`, {
                 method: "POST",
                 headers: {
                   "Content-Type": "application/json",

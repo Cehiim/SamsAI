@@ -3,6 +3,7 @@
 <head>
   {% load static %}
   <meta charset="UTF-8" />
+  <meta name="csrf-token" content="{{ csrf_token }}">
   <title>SAMSAI - Chat</title>
   <link rel="stylesheet" href="{% static 'css/style.css' %}">
   <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
