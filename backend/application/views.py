@@ -9,6 +9,8 @@ from django.contrib.auth.models import User
 from django.contrib.auth.hashers import check_password
 from django.contrib import messages
 from django.core.exceptions import ValidationError
+from django.core import serializers
+import json
 
 class LoginView(View):
     def get(self, request):
@@ -76,9 +78,15 @@ class ChatBotView(LoginRequiredMixin, View):
     def get(self, request, conversa_id):    
         conversa_atual = Conversa.objects.get(pk=conversa_id)
         usuario = conversa_atual.usuario
-        mensagens = conversa_atual.mensagens.all()
-        todas_as_conversas = Conversa.objects.filter(usuario=usuario).order_by('-data')
-        
+
+        queryset_conversas = Conversa.objects.filter(usuario=usuario).order_by('-data')
+        todas_as_conversas = serializers.serialize('json', queryset_conversas)
+        todas_as_conversas = json.dumps(todas_as_conversas)
+
+        queryset_mensagens = conversa_atual.mensagens.all()
+        mensagens = serializers.serialize('json', queryset_mensagens)
+        mensagens = json.dumps(mensagens) 
+
         context = {
             "usuario": usuario,
             "mensagens": mensagens,
@@ -86,7 +94,6 @@ class ChatBotView(LoginRequiredMixin, View):
             "conversa_id": conversa_id,
             "todas_as_conversas": todas_as_conversas
         }
-        print("fui ativado conversa existente")
         return render(request, 'chat.html', context)
     
     def post(self, request, conversa_id): # TODO: (AJAX) Arranjar um jeito melhor de renderizar as conversas
@@ -102,7 +109,11 @@ class ChatBotView(LoginRequiredMixin, View):
 class NewChatBotView(LoginRequiredMixin, View):
     def get(self, request):
         usuario = User.objects.get(pk=request.user.pk)
-        todas_as_conversas = Conversa.objects.filter(usuario=usuario).order_by('-data')
+        
+        queryset_conversas = Conversa.objects.filter(usuario=usuario).order_by('-data')
+        todas_as_conversas = serializers.serialize('json', queryset_conversas)
+        todas_as_conversas = json.dumps(todas_as_conversas)
+
         context = {
             "usuario": usuario,
             "todas_as_conversas": todas_as_conversas,
@@ -124,11 +135,15 @@ class NewChatBotView(LoginRequiredMixin, View):
             nova_conversa.save()
             nova_mensagem = Mensagem(conversa=nova_conversa, texto=conteudo_mensagem) #Cria nova mensagem
             nova_mensagem.save()
-            print("fui ativado conversa nova")
+            print("fui ativado conversa nova", nome_conversa)
             return HttpResponseRedirect(reverse("chat", args=[nova_conversa.pk]))
 
         else: #TODO: Botão de enviar no front fica inativo quando o tamanho da mensagem é menor que 1 caractere
-            todas_as_conversas = Conversa.objects.filter(usuario=usuario).order_by('-data')
+            
+            queryset_conversas = Conversa.objects.filter(usuario=usuario).order_by('-data')
+            todas_as_conversas = serializers.serialize('json', queryset_conversas)
+            todas_as_conversas = json.dumps(todas_as_conversas)
+
             context = {
                 "usuario": usuario,
                 "todas_as_conversas": todas_as_conversas,
@@ -136,7 +151,7 @@ class NewChatBotView(LoginRequiredMixin, View):
             }
             return render(request, 'chat.html', context)
             
-        
-        
-    
+class RenameView(LoginRequiredMixin, View):
+    def post(self, request):
+        pass
     

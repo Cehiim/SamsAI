@@ -5,38 +5,22 @@
   <meta charset="UTF-8" />
   <title>SAMSAI - Chat</title>
   <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+  <script src="{% static 'js/script.js' %}"></script>
+  <script>
+    const conversa_id = "{{ conversa_id }}";
+    const mensagens = JSON.parse({{ todas_as_conversas|safe }});
+    const todas_as_conversas = JSON.parse({{ todas_as_conversas|safe }});
+  </script>
 </head>
 <body>
   <div id="chatContainer" class="chat-container">
     <div class="sidebar" id="sidebar">
       <h2>Histórico de Conversas</h2>
-      <ul>
-        {% for t in todas_as_conversas %}
-          <li class="conversation-item">
-            <a class="conversation-title" href="{% url 'chat' t.pk %}">{{ t.nome }}</a>
-            <span class="options-icon">...</span>
-          </li>
-        {% endfor %}
+      <ul id="historyList">
+         <!-- Lista de conversas gerada dinamicamente -->
       </ul>
     </div>
-    <!--
-    Chat de Mensagens:
-    <div>
-        <ul>
-        {% for m in mensagens %}
-            {% if m.eh_do_usuario is True %}
-                <li class="user_msg">
-                    m.texto #"Conteúdo da mensagem do usuário" Pode ter outras tags dentro de li se necessário           
-                </li>
-            {% else %}
-                <li class="ai_msg">
-                    m.texto #"Conteúdo da mensagem da IA" Pode ter outras tags dentro de li se necessário
-                </li>
-            {% endif %}
-        {% endfor %}   
-        </ul>
-    </div>
-    -->
     
     <div class="chat-section" id="chatSection">
       <div class="chat-header">
@@ -51,6 +35,9 @@
       </div>
       <div class="chat-window" id="chatWindow">
         <p>Olá, {{ usuario }}. Digite sua mensagem para iniciar uma nova conversa.</p>
+        
+          <!-- Mensagens serão renderizadas aqui -->
+        
       </div>
         {% if conversa_id is None %}
             <form method="post" action="{% url 'new_chat' %}" class="chat-input">
@@ -141,6 +128,5 @@
     </div>
   </div>
   
-  <script src="{% static 'js/script.js' %}"></script>
 </body>
 </html>
