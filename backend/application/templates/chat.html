@@ -8,9 +8,10 @@
   <link rel="stylesheet" href="{% static 'css/style.css' %}">
   <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
   <script src="{% static 'js/script.js' %}"></script>
+  <!--O VSCode pode reclamar de erro nas linhas abaixo, mas não há nada errado ;)-->
   <script>
     const conversa_id = "{{ conversa_id }}";
-    const mensagens = JSON.parse({{ todas_as_conversas|safe }});
+    const mensagens = JSON.parse({{ todas_as_conversas|safe }}); 
     const todas_as_conversas = JSON.parse({{ todas_as_conversas|safe }});
   </script>
 </head>

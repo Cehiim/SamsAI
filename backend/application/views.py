@@ -124,7 +124,7 @@ class NewChatBotView(LoginRequiredMixin, View):
     def post(self, request):
         usuario = User.objects.get(pk=request.user.pk)
         conteudo_mensagem = request.POST.get("mensagem_usuario") #extrai conteúdo da mensagem
-        print(conteudo_mensagem)
+
         if len(conteudo_mensagem) >= 1:
             if len(conteudo_mensagem) > 20:
                 nome_conversa = conteudo_mensagem[:20] + "..."
@@ -135,7 +135,7 @@ class NewChatBotView(LoginRequiredMixin, View):
             nova_conversa.save()
             nova_mensagem = Mensagem(conversa=nova_conversa, texto=conteudo_mensagem) #Cria nova mensagem
             nova_mensagem.save()
-            print("fui ativado conversa nova", nome_conversa)
+            
             return HttpResponseRedirect(reverse("chat", args=[nova_conversa.pk]))
 
         else: #TODO: Botão de enviar no front fica inativo quando o tamanho da mensagem é menor que 1 caractere
@@ -159,7 +159,7 @@ class RenameView(LoginRequiredMixin, View):
             conversa.nome = data.get("nome", conversa.nome)
             conversa.save()
 
-            return JsonResponse({"message": "Conversa renomeada com sucesso!"}, status=200)
+            return JsonResponse({"success": True, f"message": f"Conversa renomeada com sucesso!"}, status=200)
 
         except Conversa.DoesNotExist:
             return JsonResponse({"success": False, "error": "Conversa não encontrada"}, status=404)
@@ -172,6 +172,23 @@ class RenameView(LoginRequiredMixin, View):
 
 class DeleteView(LoginRequiredMixin, View):
     def post(self, request, conversa_id):
-        pass
+        try:
+            conversa_delete = Conversa.objects.get(pk=conversa_id)
+            conversa_delete_nome = conversa_delete.nome
+            conversa_delete.delete()
+            
+            return JsonResponse({"success": True, "message": f"Conversa '{conversa_delete_nome}' deletada com sucesso!"}, status=200)
+        
+        except Conversa.DoesNotExist:
+            return JsonResponse({"success": False, "error": f"Conversa '{conversa_delete_nome}' não encontrada"}, status=404)
+        
+        except Exception as e:
+            return JsonResponse({"success": False, "error": str(e)}, status=500)
+        
+        except:
+            return JsonResponse({"success": False, "error": "Método não permitido"}, status=405)
+        
+
+            
             
     

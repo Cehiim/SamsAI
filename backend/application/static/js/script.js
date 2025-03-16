@@ -124,8 +124,6 @@ function initChatPage() {
   // ---------------------------
   let conversations       = todas_as_conversas;
   let conversationCounter = conversations.length;
-
-  console.log(conversations)
   
   
   // ---------------------------
@@ -162,13 +160,6 @@ function initChatPage() {
   // ---------------------------
   // Funções auxiliares
   // ---------------------------
-  // Salva as conversas no localStorage
-  /*
-  function saveConversations() {
-    localStorage.setItem("conversations", JSON.stringify(conversations));
-    console.log(conversations);
-  }
-  */
 
   function getCSRFToken() {
     return document.querySelector('[name=csrfmiddlewaretoken]')?.value;
@@ -188,7 +179,6 @@ function initChatPage() {
       titleA.classList.add("conversation-title");
       titleA.href = `./${conv.pk}`;
       titleA.textContent = conv.fields.nome;
-      console.log(conv)
       /*
       titleSpan.addEventListener("click", () => {
         window.location.href = `conversation.html?conversationId=${conv.id}`;
@@ -259,7 +249,6 @@ function initChatPage() {
           
             titleA.textContent = conv.fields.nome;
             li.replaceChild(titleA, input);
-            saveConversations();
           };
           input.addEventListener("blur", finishEdit);
           input.addEventListener("keydown", (keyEv) => {
@@ -309,9 +298,32 @@ function initChatPage() {
     
     deleteConfirmBtn.onclick = function() {
       conversations = conversations.filter(c => c.pk !== conv.pk);
-      saveConversations();
       renderConversationsSidebar();
       deleteModal.style.display = "none";
+      const currentConversaId = window.location.pathname.split('/').pop(); //Obtém ID da URL
+      const nomeDaConversa = conv.fields.nome;
+      // Enviar atualização para o back-end via Fetch API (AJAX)
+    fetch(`/delete/${conv.pk}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": getCSRFToken(), // Capturar o CSRF Token do Django
+      },
+      body: JSON.stringify({ key: currentConversaId }),
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        console.log("Conversa deletada com sucesso!");
+        if (currentConversaId == conv.pk) {
+          window.location.href = "/chat/new";  // Redireciona para a página de novo chat
+        }
+      } else {
+        console.error(`Erro ao deletar conversa "${nomeDaConversa}":`, data.error);
+      }
+    })
+    .catch(error => console.error("Erro na requisição:", error));
+
     };
   }
 
