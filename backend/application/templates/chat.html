@@ -8,12 +8,18 @@
   <link rel="stylesheet" href="{% static 'css/style.css' %}">
   <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
   <script src="{% static 'js/script.js' %}"></script>
+
   <!--O VSCode pode reclamar de erro nas linhas abaixo, mas não há nada errado ;)-->
   <script>
     const conversa_id = "{{ conversa_id }}";
-    const mensagens = JSON.parse({{ todas_as_conversas|safe }}); 
     const todas_as_conversas = JSON.parse({{ todas_as_conversas|safe }});
   </script>
+  {% if conversa_id is not None %}
+    <script>
+      const mensagens = JSON.parse({{ mensagens|safe }});
+    </script>
+  {% endif %}
+
 </head>
 <body>
   <div id="chatContainer" class="chat-container">
@@ -36,30 +42,20 @@
         </div>
       </div>
       <div class="chat-window" id="chatWindow">
-        <p>Olá, {{ usuario }}. Digite sua mensagem para iniciar uma nova conversa.</p>
-        
-          <!-- Mensagens serão renderizadas aqui -->
-        
-      </div>
         {% if conversa_id is None %}
-            <form method="post" action="{% url 'new_chat' %}" class="chat-input">
-              {% csrf_token %}
-              <button id="fileBtn" class="btn-file">📎</button>
-              <input type="file" id="fileInput" style="display:none;">
-              <input name="mensagem_usuario" type="text" id="messageInput" placeholder="Digite sua mensagem...">
-              <button id="audioBtn" class="btn-audio">🎤</button>
-              <button id="sendBtn" class="btn-send">Enviar</button>
-            </form>
+          <p>Olá, {{ usuario }}. Digite sua mensagem para iniciar uma nova conversa.</p>
+          <!--Cria coisa pra página nova (chat/new)-->
         {% else %}
-            <form method="post" action="{% url 'chat' conversa_id %}" class="chat-input">
-              {% csrf_token %}
-              <button id="fileBtn" class="btn-file">📎</button>
-              <input type="file" id="fileInput" style="display:none;">
-              <input name="mensagem_usuario" type="text" id="messageInput" placeholder="Digite sua mensagem...">
-              <button id="audioBtn" class="btn-audio">🎤</button>
-              <button id="sendBtn" class="btn-send">Enviar</button>
-            </form>
+          <!--Mensagens renderizadas pelo Javascript-->
         {% endif %}
+      </div>
+      <div class="chat-input">
+        <button id="fileBtn" class="btn-file">📎</button>
+        <input type="file" id="fileInput" style="display:none;">
+        <input name="mensagem_usuario" type="text" id="messageInput" placeholder="Digite sua mensagem...">
+        <button id="audioBtn" class="btn-audio">🎤</button>
+        <button id="sendBtn" class="btn-send">Enviar</button>
+      </div>
     </div>
   </div>
   

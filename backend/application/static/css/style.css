@@ -320,7 +320,7 @@ button:hover.profile-btn, a:hover.profile-btn {
    MENSAGENS
 ---------------------------------------------------- */
 .message {
-  display: inline-block;
+  display: list;
   padding: 8px;
   margin-bottom: 5px;
   border-radius: 4px;

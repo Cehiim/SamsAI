@@ -97,13 +97,24 @@ class ChatBotView(LoginRequiredMixin, View):
         return render(request, 'chat.html', context)
     
     def post(self, request, conversa_id): # TODO: (AJAX) Arranjar um jeito melhor de renderizar as conversas
-        conversa_atual = Conversa.objects.get(pk=conversa_id)
-        conteudo_mensagem = request.POST.get("mensagem_usuario") #extrai conteúdo da mensagem
+        try:
+            data = json.loads(request.body)
+            conversa_atual = Conversa.objects.get(pk=conversa_id)
+            conteudo_mensagem = data.get("message") #extrai conteúdo da mensagem
 
-        nova_mensagem = Mensagem(conversa=conversa_atual, texto=conteudo_mensagem) #Cria nova mensagem
-        nova_mensagem.save()
+            nova_mensagem = Mensagem(conversa=conversa_atual, texto=conteudo_mensagem) #Cria nova mensagem
+            nova_mensagem.save()
+
+            return JsonResponse({"success": True, "message": f"Mensagem salva com sucesso!"}, status=200)
         
-        return redirect('chat', conversa_id=conversa_id)
+        except Conversa.DoesNotExist:
+            return JsonResponse({"success": False, "error": "Conversa não encontrada"}, status=404)
+        
+        except Exception as e:
+            return JsonResponse({"success": False, "error": str(e)}, status=500)
+        
+        except:
+            return JsonResponse({"success": False, "error": "Método não permitido"}, status=405)
 
 
 class NewChatBotView(LoginRequiredMixin, View):
@@ -187,6 +198,10 @@ class DeleteView(LoginRequiredMixin, View):
         
         except:
             return JsonResponse({"success": False, "error": "Método não permitido"}, status=405)
+
+class PseudoIAView(LoginRequiredMixin, View):
+    def post(self, request):
+        pass
         
 
             
