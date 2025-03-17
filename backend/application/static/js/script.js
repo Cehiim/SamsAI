@@ -301,7 +301,6 @@ function initChatPage() {
       renderConversationsSidebar();
       deleteModal.style.display = "none";
       const currentConversaId = window.location.pathname.split('/').pop(); //Obtém ID da URL
-      const nomeDaConversa = conv.fields.nome;
       // Enviar atualização para o back-end via Fetch API (AJAX)
     fetch(`/delete/${conv.pk}`, {
       method: "POST",
@@ -318,12 +317,9 @@ function initChatPage() {
         if (currentConversaId == conv.pk) {
           window.location.href = "/chat/new";  // Redireciona para a página de novo chat
         }
-      } else {
-        console.error(`Erro ao deletar conversa "${nomeDaConversa}":`, data.error);
       }
     })
     .catch(error => console.error("Erro na requisição:", error));
-
     };
   }
 
@@ -383,9 +379,7 @@ function initChatPage() {
     conversations.push(newConv);
     // Simula resposta do bot
     newConv.messages.push({ text: "Olá! Como posso ajudar?", sender: "bot" });
-    saveConversations();
     renderConversationsSidebar();
-    //window.location.href = `chat/${newConv.id}`;
   });
   
   // Permite envio com a tecla Enter
