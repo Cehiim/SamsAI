@@ -102,13 +102,17 @@ function initLoginPage() {
   });
 
   // Efetua o login do usuário
+  /*
   loginBtn.addEventListener("click", () => {
     const username = usernameInput.value.trim();
     const password = passwordInput.value.trim();
-    if (!(registeredUsers[username] && registeredUsers[username] === password)) {
+    if (registeredUsers[username] && registeredUsers[username] === password) {
+      window.location.href = "chat.html";
+    } else {
       loginError.textContent = "Usuário ou senha incorretos!";
     }
   });
+  */
 }
 
 /* ====================================================
@@ -118,8 +122,9 @@ function initChatPage() {
   // ---------------------------
   // Variáveis e armazenamento
   // ---------------------------
-  let conversations       = JSON.parse(localStorage.getItem("conversations") || "[]");
+  let conversations       = todas_as_conversas;
   let conversationCounter = conversations.length;
+  
   
   // ---------------------------
   // Seleção dos elementos do DOM
@@ -142,6 +147,7 @@ function initChatPage() {
 
   const profileIcon   = document.getElementById("profileIcon");
   const profileDropdown = document.getElementById("profileDropdown");
+  const logoutBtn     = document.getElementById("logoutBtn");
   const configBtn     = document.getElementById("configBtn");
   const configModal   = document.getElementById("configModal");
   const closeModal    = document.getElementById("closeModal");
@@ -154,9 +160,9 @@ function initChatPage() {
   // ---------------------------
   // Funções auxiliares
   // ---------------------------
-  // Salva as conversas no localStorage
-  function saveConversations() {
-    localStorage.setItem("conversations", JSON.stringify(conversations));
+
+  function getCSRFToken() {
+    return document.querySelector('[name=csrfmiddlewaretoken]')?.value;
   }
 
   // Renderiza a lista de conversas na barra lateral
@@ -166,12 +172,18 @@ function initChatPage() {
       // Cria o item da conversa
       const li = document.createElement("li");
       li.classList.add("conversation-item");
-      li.setAttribute("data-id", conv.id);
+      li.setAttribute("data-id", conv.pk);
       
       // Título da conversa (com limite de caracteres)
-      const titleSpan = document.createElement("span");
-      titleSpan.classList.add("conversation-title");
-      titleSpan.textContent = conv.title || "Nova Conversa";
+      const titleA = document.createElement("a");
+      titleA.classList.add("conversation-title");
+      titleA.href = `./${conv.pk}`;
+      titleA.textContent = conv.fields.nome;
+      /*
+      titleSpan.addEventListener("click", () => {
+        window.location.href = `conversation.html?conversationId=${conv.id}`;
+      });
+      */
       
       // Ícone de opções (representado por "...")
       const optionsIcon = document.createElement("span");
@@ -206,25 +218,44 @@ function initChatPage() {
           popup.remove();
           const input = document.createElement("input");
           input.type = "text";
-          input.value = conv.title;
+          input.value = conv.fields.nome;
           input.classList.add("conversation-title-edit");
-          li.replaceChild(input, titleSpan);
+          li.replaceChild(input, titleA);
           input.focus();
           
           const finishEdit = () => {
             if (input.value.trim() !== "") {
-              conv.title = input.value.trim();
+              conv.fields.nome = input.value.trim();
+          
+              // Enviar atualização para o back-end via Fetch API (AJAX)
+              fetch(`/rename/${conv.pk}`, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "X-CSRFToken": getCSRFToken(), // Capturar o CSRF Token do Django
+                },
+                body: JSON.stringify({ nome: conv.fields.nome }),
+              })
+              .then(response => response.json())
+              .then(data => {
+                if (data.success) {
+                  console.log("Nome atualizado com sucesso!");
+                } else {
+                  console.error("Erro ao atualizar nome:", data.error);
+                }
+              })
+              .catch(error => console.error("Erro na requisição:", error));
             }
-            titleSpan.textContent = conv.title;
-            li.replaceChild(titleSpan, input);
-            saveConversations();
+          
+            titleA.textContent = conv.fields.nome;
+            li.replaceChild(titleA, input);
           };
           input.addEventListener("blur", finishEdit);
           input.addEventListener("keydown", (keyEv) => {
             if (keyEv.key === "Enter") {
               input.blur();
             } else if (keyEv.key === "Escape") {
-              input.value = conv.title;
+              input.value = conv.fields.nome;
               input.blur();
             }
           });
@@ -243,7 +274,7 @@ function initChatPage() {
         document.querySelectorAll(".inline-popup").forEach(el => el.remove());
       });
       
-      li.appendChild(titleSpan);
+      li.appendChild(titleA);
       li.appendChild(optionsIcon);
       historyList.appendChild(li);
     });
@@ -258,7 +289,7 @@ function initChatPage() {
     const deleteConfirmBtn = document.getElementById("deleteConfirmBtn");
 
     deleteModalTitle.textContent = "Apagar Conversa";
-    deleteModalBody.textContent  = `Deseja mesmo apagar a conversa "${conv.title}"?`;
+    deleteModalBody.textContent  = `Deseja mesmo apagar a conversa "${conv.fields.nome}"?`;
     deleteModal.style.display = "flex";
     
     deleteCancelBtn.onclick = function() {
@@ -266,10 +297,29 @@ function initChatPage() {
     };
     
     deleteConfirmBtn.onclick = function() {
-      conversations = conversations.filter(c => c.id !== conv.id);
-      saveConversations();
+      conversations = conversations.filter(c => c.pk !== conv.pk);
       renderConversationsSidebar();
       deleteModal.style.display = "none";
+      const currentConversaId = window.location.pathname.split('/').pop(); //Obtém ID da URL
+      // Enviar atualização para o back-end via Fetch API (AJAX)
+    fetch(`/delete/${conv.pk}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": getCSRFToken(), // Capturar o CSRF Token do Django
+      },
+      body: JSON.stringify({ key: currentConversaId }),
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        console.log("Conversa deletada com sucesso!");
+        if (currentConversaId == conv.pk) {
+          window.location.href = "/chat/new";  // Redireciona para a página de novo chat
+        }
+      }
+    })
+    .catch(error => console.error("Erro na requisição:", error));
     };
   }
 
@@ -295,19 +345,19 @@ function initChatPage() {
   // Modal para renomear conversa
   function showRenameModal(conv) {
     modalTitle.textContent = "Renomear Conversa";
-    modalBody.innerHTML = `<input type="text" id="newNameInput" value="${conv.title}">`;
+    modalBody.innerHTML = `<input type="text" id="newNameInput" value="${conv.fields.nome}">`;
     customModal.style.display = "flex";
     currentAction = "rename";
-    currentConvId = conv.id;
+    currentConvId = conv.pk;
   }
 
   // Modal customizado para exclusão de conversa
   function showDeleteModalCustom(conv) {
     modalTitle.textContent = "Apagar Conversa";
-    modalBody.innerHTML = `<p>Deseja realmente apagar a conversa "${conv.title}"?</p>`;
+    modalBody.innerHTML = `<p>Deseja realmente apagar a conversa "${conv.fields.nome}"?</p>`;
     customModal.style.display = "flex";
     currentAction = "delete";
-    currentConvId = conv.id;
+    currentConvId = conv.pk;
   }
 
   // ---------------------------
@@ -329,9 +379,7 @@ function initChatPage() {
     conversations.push(newConv);
     // Simula resposta do bot
     newConv.messages.push({ text: "Olá! Como posso ajudar?", sender: "bot" });
-    saveConversations();
     renderConversationsSidebar();
-    
   });
   
   // Permite envio com a tecla Enter
@@ -415,10 +463,12 @@ function initConversationPage() {
   // ---------------------------
   // Obtenção dos parâmetros da URL e seleção da conversa atual
   // ---------------------------
+  /*
   const urlParams      = new URLSearchParams(window.location.search);
   const conversationId = urlParams.get("conversationId");
   let conversations    = loadConversations();
   const currentConversation = conversations.find(conv => conv.id === conversationId);
+  */
 
   // ---------------------------
   // Seleção dos elementos do DOM
