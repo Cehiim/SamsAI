@@ -1,6 +1,6 @@
 from django.shortcuts import redirect, render
 from django.views import View
-from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse, Http404
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse
 from django.contrib.auth import login, logout
@@ -75,9 +75,15 @@ class CadastroView(View):
 
 
 class ChatBotView(LoginRequiredMixin, View):
-    def get(self, request, conversa_id):    
-        conversa_atual = Conversa.objects.get(pk=conversa_id)
-        usuario = conversa_atual.usuario
+    def get(self, request, conversa_id):
+        try:    
+            conversa_atual = Conversa.objects.get(pk=conversa_id)
+            if conversa_atual.usuario != request.user:
+                raise Http404("Conversa não encontrada")
+        except Conversa.DoesNotExist:
+            raise Http404("Conversa não encontrada")
+        
+        usuario = request.user
 
         queryset_conversas = Conversa.objects.filter(usuario=usuario).order_by('-data')
         todas_as_conversas = serializers.serialize('json', queryset_conversas)
@@ -96,10 +102,13 @@ class ChatBotView(LoginRequiredMixin, View):
         }
         return render(request, 'chat.html', context)
     
-    def post(self, request, conversa_id): # TODO: (AJAX) Arranjar um jeito melhor de renderizar as conversas
+    def post(self, request, conversa_id): # TODO: (AJAX) Arranjar um jeito melhor de renderizar as conversas      
         try:
             data = json.loads(request.body)
             conversa_atual = Conversa.objects.get(pk=conversa_id)
+            if conversa_atual.usuario != request.user:
+                return JsonResponse({"success": False, "error": "Conversa não encontrada"}, status=404)
+
             conteudo_mensagem = data.get("message") #extrai conteúdo da mensagem
 
             nova_mensagem = Mensagem(conversa=conversa_atual, texto=conteudo_mensagem) #Cria nova mensagem
@@ -159,6 +168,10 @@ class RenameView(LoginRequiredMixin, View):
         try:
             data = json.loads(request.body)
             conversa = Conversa.objects.get(pk=conversa_id)
+
+            if conversa.usuario != request.user:
+                raise JsonResponse({"success": False, "error": "Conversa não encontrada"}, status=404)
+
             conversa.nome = data.get("nome", conversa.nome)
             conversa.save()
 
@@ -177,6 +190,10 @@ class DeleteView(LoginRequiredMixin, View):
     def post(self, request, conversa_id):
         try:
             conversa_delete = Conversa.objects.get(pk=conversa_id)
+
+            if conversa_delete.usuario != request.user:
+                raise JsonResponse({"success": False, "error": "Conversa não encontrada"}, status=404)
+
             conversa_delete_nome = conversa_delete.nome
             conversa_delete.delete()
             
