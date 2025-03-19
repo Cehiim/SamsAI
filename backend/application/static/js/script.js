@@ -407,7 +407,7 @@ function initChatPage() {
   // ---------------------------
   // Obtenção dos parâmetros da URL e seleção da conversa atual
   // ---------------------------
-  let currentConversation = false;
+  var currentConversation = false;
   if(conversa_id != "None")
   {
     currentConversation = conversations.find(conv => String(conv.pk) === String(conversa_id));
@@ -444,7 +444,13 @@ function initChatPage() {
     // Adiciona mensagem do usuário e salva
     
     // Enviar atualização para o back-end via Fetch API (AJAX)
-    fetch(`/chat/${conversa_id}`, {
+    let conv_id;
+    if (conversa_id == "None")
+      {conv_id = "new";}
+    else
+      {conv_id = conversa_id;}
+
+    fetch(`/chat/${conv_id}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -456,16 +462,17 @@ function initChatPage() {
     .then(data => {
       if (data.success) {
         console.log("Mensagem salva com sucesso!");
+        if(conversa_id == "None")
+          window.location.href = data.redirect;
       } else {
         console.error("Erro ao salvar mensagem:", data.error);
       }
     })
     .catch(error => console.error("Erro na requisição:", error));
-    window.location.href = `/chat/${conversa_id}`;
 
     //Envia requisição para IA
 
-    //currentConversation.messages.push({ text: messageText, sender: "user" });
+    mensagens.push({fields:{texto: messageText, eh_do_usuario: true}});
     saveConversations(conversations);
     renderMessages();
     messageInput.value = "";

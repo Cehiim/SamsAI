@@ -4,7 +4,13 @@
   {% load static %}
   <meta charset="UTF-8" />
   <meta name="csrf-token" content="{{ csrf_token }}">
-  <title>SAMSAI - Chat</title>
+
+  {% if conversa_id is None %}
+    <title>SAMSAI - Chat</title>
+  {% else %}
+    <title>SAMSAI - {{ conversa_atual.nome }}</title>
+  {% endif %}
+  
   <link rel="stylesheet" href="{% static 'css/style.css' %}">
   <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
   <script src="{% static 'js/script.js' %}"></script>
@@ -16,7 +22,7 @@
   </script>
   {% if conversa_id is not None %}
     <script>
-      const mensagens = JSON.parse({{ mensagens|safe }});
+      let mensagens = JSON.parse({{ mensagens|safe }});
     </script>
   {% endif %}
 

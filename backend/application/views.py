@@ -128,13 +128,14 @@ class NewChatBotView(LoginRequiredMixin, View):
         context = {
             "usuario": usuario,
             "todas_as_conversas": todas_as_conversas,
-            "conversa_id": None
+            "conversa_id": None,
         }
         return render(request, "chat.html", context)
     
     def post(self, request):
         usuario = User.objects.get(pk=request.user.pk)
-        conteudo_mensagem = request.POST.get("mensagem_usuario") #extrai conteúdo da mensagem
+        data = json.loads(request.body)
+        conteudo_mensagem = data.get("message") #extrai conteúdo da mensagem
 
         if len(conteudo_mensagem) >= 1:
             if len(conteudo_mensagem) > 20:
@@ -146,21 +147,12 @@ class NewChatBotView(LoginRequiredMixin, View):
             nova_conversa.save()
             nova_mensagem = Mensagem(conversa=nova_conversa, texto=conteudo_mensagem) #Cria nova mensagem
             nova_mensagem.save()
-            
-            return HttpResponseRedirect(reverse("chat", args=[nova_conversa.pk]))
+            redirect_url = reverse('chat', args=[nova_conversa.pk])
+            return JsonResponse({'success': True, 'message': f'Nova conversa: "{nome_conversa}" criada com sucesso!', 'redirect': redirect_url})
+        
+        else:
+            return JsonResponse({"success": False, "error": "Mensagem inválida"})
 
-        else: #TODO: Botão de enviar no front fica inativo quando o tamanho da mensagem é menor que 1 caractere
-            
-            queryset_conversas = Conversa.objects.filter(usuario=usuario).order_by('-data')
-            todas_as_conversas = serializers.serialize('json', queryset_conversas)
-            todas_as_conversas = json.dumps(todas_as_conversas)
-
-            context = {
-                "usuario": usuario,
-                "todas_as_conversas": todas_as_conversas,
-                "conversa_id": None
-            }
-            return render(request, 'chat.html', context)
             
 class RenameView(LoginRequiredMixin, View):
     def post(self, request, conversa_id):
@@ -200,9 +192,23 @@ class DeleteView(LoginRequiredMixin, View):
             return JsonResponse({"success": False, "error": "Método não permitido"}, status=405)
 
 class PseudoIAView(LoginRequiredMixin, View):
-    def post(self, request):
-        pass
+    def post(self, request, conversa_id):
+        try:
+            conversa = Conversa.objects.get(pk=conversa_id)
+            texto = "Sou a Pseudo-IA, em que posso ajudar?"
+            mensagem = Mensagem(conversa=conversa, texto=texto, eh_do_usuario = False)
+            mensagem.save()
+
+            return JsonResponse({"success": True, "message": texto}, status=200)
         
+        except Conversa.DoesNotExist:
+            return JsonResponse({"success": False, "error": f"Conversa '{conversa.nome}' não encontrada"}, status=404)
+        
+        except Exception as e:
+            return JsonResponse({"success": False, "error": str(e)}, status=500)
+        
+        except:
+            return JsonResponse({"success": False, "error": "Método não permitido"}, status=405)
 
             
             
