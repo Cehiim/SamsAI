@@ -170,6 +170,11 @@ function initChatPage() {
       const li = document.createElement("li");
       li.classList.add("conversation-item");
       li.setAttribute("data-id", conv.pk);
+
+      if (conversa_id == conv.pk)
+      {
+        li.setAttribute("style", "background-color:rgb(148, 63, 73)");
+      }
       
       // Título da conversa (com limite de caracteres)
       const titleA = document.createElement("a");
@@ -440,7 +445,10 @@ function initChatPage() {
   // ---------------------------
   sendBtn.addEventListener("click", () => {
     const messageText = messageInput.value.trim();
-    if (messageText === "") return;
+    if (messageText === ""){
+      //sendBtn.setAttribute("style", "background-color: #333; color: #555")
+      return;
+    };
     // Adiciona mensagem do usuário e salva
     
     // Enviar atualização para o back-end via Fetch API (AJAX)

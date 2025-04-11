@@ -4,7 +4,10 @@
     <!-- Formulário de Login -->
     <form id="loginForm" class="login-form" method="post" action="{% url 'login' %}">
       {% csrf_token %}
+      <legend id="email">Email de Login:</legend>
       <input name="email" type="email" id="usernameInput" placeholder="Email">
+
+      <legend class="input-margin">Senha:</legend>
       <input name="senha" type="password" id="passwordInput" placeholder="Senha">
       <button id="loginBtn">Entrar</button>
       <p id="loginError" class="error-message"></p>

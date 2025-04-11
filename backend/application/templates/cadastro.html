@@ -4,11 +4,18 @@
     <!-- Formulário de Cadastro -->
     <form id="registerForm" class="register-form" method="post" action="{% url 'cadastro' %}">
         {% csrf_token %}
+        <legend>Digite o nome de usuário:</legend>
         <input name="nome" type="text" id="registerName" placeholder="Nome">
+
+        <legend class="input-margin">Digite o email:</legend>
         <input name="email" type="email" id="registerEmail" placeholder="Email">
+
+        <legend class="input-margin">Crie uma senha:</legend>
         <input name="senha1" type="password" id="registerPassword1" placeholder="Crie uma senha">
+
+        <legend class="input-margin">Confirme a senha:</legend>
         <input name="senha2" type="password" id="registerPassword2" placeholder="Digite novamente a senha">
         <p id="registerError" class="error-message"></p>
-        <button id="createAccountBtn">Criar Conta</button>
+        <button id="createAccountBtn" class="input-margin">Criar Conta</button>
     </form>
 {% endblock %}
