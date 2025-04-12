@@ -68,13 +68,17 @@ p.not_found_message{
 
 .login-form input,
 .register-form input {
-  margin-bottom: 10px;
   padding: 10px;
   border: none;
+  width: 100%;
   border-radius: 4px;
   background-color: #FFF;
   color: #000000;
   font-size: 1rem;
+}
+
+.input-container{
+  margin-bottom: 10px;
 }
 
 .login-form input:focus,
@@ -82,7 +86,7 @@ p.not_found_message{
   outline: 0 solid #722F37;
 }
 
-form > legend{
+.input-container > legend{
   text-align: left;
   margin-bottom: 3px;
   font-size: 1rem;
@@ -107,12 +111,6 @@ form > legend{
 .login-form button:hover,
 .register-form button:hover {
   background-color: #d0d0d0;
-}
-
-.error-message {
-  color: #ff6666;
-  margin-top: 5px;
-  font-size: 0.9rem;
 }
 
 .messages{

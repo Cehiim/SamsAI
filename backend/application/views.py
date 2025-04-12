@@ -68,6 +68,9 @@ class CadastroView(View):
                 novo_usuario.save()
                 login(request, novo_usuario)
                 return HttpResponseRedirect(reverse('new_chat'))
+            else:
+                messages.error(request, "Não foi possível realizar o cadastro. Verifique os dados e tente novamente")
+                return render(request, "cadastro.html")
             
         except:
             messages.error(request, "Não foi possível realizar o cadastro. Verifique os dados e tente novamente")

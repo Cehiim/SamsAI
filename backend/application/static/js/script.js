@@ -21,11 +21,9 @@ function initLoginPage() {
   const passwordInput    = document.getElementById("passwordInput");
   const loginBtn         = document.getElementById("loginBtn");
   const loginError       = document.getElementById("loginError");
-  const showRegisterBtn  = document.getElementById("showRegisterBtn");
   const registerName     = document.getElementById("registerName");
   const registerEmail    = document.getElementById("registerEmail");
   const registerPassword = document.getElementById("registerPassword");
-  const registerError    = document.getElementById("registerError");
   const createAccountBtn = document.getElementById("createAccountBtn");
   const cancelRegisterBtn= document.getElementById("cancelRegisterBtn");
 
@@ -55,16 +53,11 @@ function initLoginPage() {
   // Configuração dos event listeners
   // ---------------------------
   // Exibe o formulário de cadastro
-  showRegisterBtn.addEventListener("click", () => {
-    loginForm.style.display = "none";
-    registerForm.style.display = "flex";
-  });
 
   // Cancela o cadastro e volta para o formulário de login
   cancelRegisterBtn.addEventListener("click", () => {
     registerForm.style.display = "none";
     loginForm.style.display = "flex";
-    registerError.textContent = "";
     registerEmail.value = "";
     registerPassword.value = "";
     registerName.value = "";
@@ -76,15 +69,6 @@ function initLoginPage() {
     const email    = registerEmail.value.trim();
     const password = registerPassword.value.trim();
     
-    if (!isValidEmail(email)) {
-      registerError.textContent = "Por favor, insira um email válido.";
-      return;
-    }
-    if (!isValidPassword(password)) {
-      registerError.textContent = "A senha deve ter pelo menos 10 caracteres, incluir números e uma letra maiúscula.";
-      return;
-    }
-    
     registeredUsers[email] = password;
     localStorage.setItem("registeredUsers", JSON.stringify(registeredUsers));
     alert("Conta criada com sucesso!");
@@ -93,7 +77,6 @@ function initLoginPage() {
     usernameInput.value = email;
     registerForm.style.display = "none";
     loginForm.style.display = "flex";
-    registerError.textContent = "";
     registerEmail.value = "";
     registerPassword.value = "";
     registerName.value = "";
@@ -445,10 +428,8 @@ function initChatPage() {
   // ---------------------------
   sendBtn.addEventListener("click", () => {
     const messageText = messageInput.value.trim();
-    if (messageText === ""){
-      //sendBtn.setAttribute("style", "background-color: #333; color: #555")
+    if (messageText == "")
       return;
-    };
     // Adiciona mensagem do usuário e salva
     
     // Enviar atualização para o back-end via Fetch API (AJAX)
@@ -484,7 +465,6 @@ function initChatPage() {
     saveConversations(conversations);
     renderMessages();
     messageInput.value = "";
-    messageInput.style.height = "auto";
     
     // Simula resposta do bot após 500ms
     setTimeout(() => {

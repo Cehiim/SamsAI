@@ -1,17 +1,37 @@
 {% extends 'base.html' %}
 {% load static %}
   {% block content %}
+    <title>SamsAI | Login</title>
+
     <!-- Formulário de Login -->
     <form id="loginForm" class="login-form" method="post" action="{% url 'login' %}">
       {% csrf_token %}
-      <legend id="email">Email de Login:</legend>
-      <input name="email" type="email" id="usernameInput" placeholder="Email">
+      <div class="input-container">
+        <legend id="email">Email de Login:</legend>
+        <input name="email" type="email" id="usernameInput" placeholder="Email"
+        data-parsley-trigger="change" data-parsley-error-message="Entre um e-mail válido."
+        data-parsley-required="true"
+        >
+      </div>
 
-      <legend class="input-margin">Senha:</legend>
-      <input name="senha" type="password" id="passwordInput" placeholder="Senha">
+      <div class="input-container">
+        <legend class="input-margin">Senha:</legend>
+        <input name="senha" type="password" id="passwordInput" placeholder="Senha"
+        data-parsley-required="true"
+        data-parsley-trigger="change"
+        data-parsley-required-message="Campo obrigatório."
+        >
+      </div>
+
       <button id="loginBtn">Entrar</button>
       <p id="loginError" class="error-message"></p>
       <a class="link-btn" href="{% url 'cadastro' %}">Criar Conta</a>
     </form>
+  
+    <script>
+      $(document).ready(function () {
+      $('#loginForm').parsley();
+    });
+    </script>
   {% endblock %}
 
