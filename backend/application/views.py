@@ -33,14 +33,19 @@ class LoginView(View):
             senha = request.POST.get("senha")
             usuario = User.objects.get(email=email)
 
-            if usuario is not None and usuario.is_active and check_password(senha, usuario.password):
-                login(request, usuario)
-                return HttpResponseRedirect(reverse('new_chat'))
-            else:
-                messages.error(request, "email ou senha incorretos")
+            if usuario is None:
+                messages.error(request, "Email não cadastrado ou incorreto")
+                return render(request, "login.html")
+            
+            if not check_password(senha, usuario.password) and usuario.is_active:
+                messages.error(request, "Senha incorreta")
+                return render(request, "login.html")
+
+            login(request, usuario)
+            return HttpResponseRedirect(reverse('new_chat'))
         
         except Exception as e:
-            messages.error(request, "email ou senha incorretos")
+            messages.error(request, "Email não cadastrado ou incorreto")
         
         return render(request, "login.html")
     
@@ -229,6 +234,25 @@ class PseudoIAView(LoginRequiredMixin, View):
         
         except:
             return JsonResponse({"success": False, "error": "Método não permitido"}, status=405)
+
+class UploadView(LoginRequiredMixin, View):
+    def post(self, request, conversa_id):
+        try:
+            conversa = Conversa.objects.get(pk=conversa_id)
+            arquivo = request.FILES["arquivo"]
+            documento = Documento.objects.create(titulo=str(arquivo), arquivo=arquivo, conversa=conversa)
+
+            return JsonResponse({'success': True, 'message': 'Upload feito com sucesso!'})
+        
+        except Conversa.DoesNotExist:
+            return JsonResponse({"success": False, "error": f"Conversa '{conversa.nome}' não encontrada"}, status=404)
+        
+        except Exception as e:
+            return JsonResponse({"success": False, "error": str(e)}, status=500)
+        
+        except:
+            return JsonResponse({"success": False, "error": "Método não permitido"}, status=405)
+
 
             
             

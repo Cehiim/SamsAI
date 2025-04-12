@@ -14,8 +14,6 @@ class Conversa(models.Model):
         verbose_name = "Conversa"
         verbose_name_plural = "Conversas"
 
-# Colocar limites de conversas e mensagens
-
 class Mensagem(models.Model):
     conversa = models.ForeignKey(Conversa, on_delete=models.CASCADE, related_name="mensagens")
     texto = models.TextField("Texto", max_length=10000, validators=[MinLengthValidator(1)])
@@ -31,3 +29,16 @@ class Mensagem(models.Model):
     class Meta:
         verbose_name = "Mensagem"
         verbose_name_plural = "Mensagens"
+
+class Documento(models.Model):
+    conversa = models.ForeignKey(Conversa, on_delete=models.CASCADE, related_name="documentos")
+    titulo = models.CharField(max_length=100)
+    arquivo = models.FileField(upload_to='upload')
+    data = models.DateTimeField("Data e horário do upload", auto_now_add=True)
+
+    def __str__(self):
+        return self.titulo
+    
+    class Meta:
+        verbose_name = "Documento"
+        verbose_name_plural = "Documentos"

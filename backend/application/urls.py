@@ -9,5 +9,6 @@ urlpatterns = [
     path('cadastro', CadastroView.as_view(), name='cadastro'),
     path('rename/<int:conversa_id>', RenameView.as_view(), name='rename'),
     path('delete/<int:conversa_id>', DeleteView.as_view(), name='delete'),
+    path('upload/<int:conversa_id>', UploadView.as_view(), name='upload'),
     path('pseudoia', PseudoIAView.as_view(), name='pseudoia')
 ]

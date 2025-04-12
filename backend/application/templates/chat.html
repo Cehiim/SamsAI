@@ -59,8 +59,8 @@
       </div>
       <div class="chat-input">
         <button id="fileBtn" class="btn-file"><img style="width: 25px; height: 30px;" src="{% static 'img/paperclip.svg' %}" alt="Envie um PDF"></button>
-        <input type="file" id="fileInput" style="display:none;">
-        <input name="mensagem_usuario" type="text" id="messageInput" placeholder="Digite sua mensagem...">
+        <input name="arquivo" type="file" id="fileInput" style="display:none;">
+        <input name="mensagem_usuario" type="text" autocomplete="off" id="messageInput" placeholder="Digite sua mensagem...">
         <button id="audioBtn" class="btn-audio"><img style="width: 25px; height: 30px;" src="{% static 'img/microphone.svg' %}" alt="Envie um áudio"></button>
         <button id="sendBtn" class="btn-send">Enviar</button>
       </div>

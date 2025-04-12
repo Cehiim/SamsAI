@@ -494,16 +494,31 @@ function initChatPage() {
   fileInput.addEventListener("change", () => {
     if (fileInput.files.length > 0) {
       const file = fileInput.files[0];
-      currentConversation.messages.push({ text: "Arquivo enviado: " + file.name, sender: "user" });
-      saveConversations(conversations);
+      const formData = new FormData();
+
+      formData.append("arquivo", file);
+      formData.append("titulo", file.name);
+
+      // Enviar PDF para o back-end via Fetch API (AJAX)
+        fetch(`/upload/${conversa_id}`, {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': getCSRFToken()
+          },
+          body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            console.log(data.message);
+          } else {
+            console.error("Erro ao salvar mensagem:", data.error);
+          }
+        })
+        .catch(error => console.error("Erro na requisição:", error));
+
       renderMessages();
       fileInput.value = "";
-      // Resposta simulada do bot
-      setTimeout(() => {
-        currentConversation.messages.push({ text: "Arquivo recebido. Em breve responderei!", sender: "bot" });
-        saveConversations(conversations);
-        renderMessages();
-      }, 500);
     }
   });
   
