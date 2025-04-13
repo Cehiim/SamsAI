@@ -11,6 +11,8 @@ from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.core import serializers
 import json
+import openai
+from decouple import config
 
 class LoginView(View):
     def get(self, request):
@@ -117,12 +119,29 @@ class ChatBotView(LoginRequiredMixin, View):
             if conversa_atual.usuario != request.user:
                 return JsonResponse({"success": False, "error": "Conversa não encontrada"}, status=404)
 
-            conteudo_mensagem = data.get("message") #extrai conteúdo da mensagem
+            conteudo_mensagem_usuario = data.get("message") #extrai conteúdo da mensagem
 
-            nova_mensagem = Mensagem(conversa=conversa_atual, texto=conteudo_mensagem) #Cria nova mensagem
-            nova_mensagem.save()
+            nova_mensagem_usuario = Mensagem(conversa=conversa_atual, texto=conteudo_mensagem_usuario) #Cria nova mensagem
+            nova_mensagem_usuario.save()
 
-            return JsonResponse({"success": True, "message": f"Mensagem salva com sucesso!"}, status=200)
+            client = openai.OpenAI(
+                api_key=config('API_KEY'),
+                base_url="https://chat.maritaca.ai/api"
+            )
+
+            response = client.chat.completions.create(
+              model="sabia-3",
+              messages=[
+                {"role": "user", "content": conteudo_mensagem_usuario},
+              ],
+              max_tokens=8000
+            )
+            mensagem_IA = response.choices[0].message.content 
+
+            nova_mensagem_IA = Mensagem(conversa=conversa_atual, texto=mensagem_IA, eh_do_usuario=False) #Salva resposta da IA
+            nova_mensagem_IA.save()
+
+            return JsonResponse({"success": True, "message": mensagem_IA}, status=200)
         
         except Conversa.DoesNotExist:
             return JsonResponse({"success": False, "error": "Conversa não encontrada"}, status=404)
@@ -152,20 +171,38 @@ class NewChatBotView(LoginRequiredMixin, View):
     def post(self, request):
         usuario = User.objects.get(pk=request.user.pk)
         data = json.loads(request.body)
-        conteudo_mensagem = data.get("message") #extrai conteúdo da mensagem
+        conteudo_mensagem_usuario = data.get("message") #extrai conteúdo da mensagem
 
-        if len(conteudo_mensagem) >= 1:
-            if len(conteudo_mensagem) > 20:
-                nome_conversa = conteudo_mensagem[:20] + "..."
+        if len(conteudo_mensagem_usuario) >= 1:
+            if len(conteudo_mensagem_usuario) > 20:
+                nome_conversa = conteudo_mensagem_usuario[:20] + "..."
             else:
-                nome_conversa = conteudo_mensagem
+                nome_conversa = conteudo_mensagem_usuario
             
             nova_conversa = Conversa(usuario=usuario, nome=nome_conversa) #Cria nova conversa
             nova_conversa.save()
-            nova_mensagem = Mensagem(conversa=nova_conversa, texto=conteudo_mensagem) #Cria nova mensagem
+            nova_mensagem = Mensagem(conversa=nova_conversa, texto=conteudo_mensagem_usuario) #Cria nova mensagem
             nova_mensagem.save()
+            
+            client = openai.OpenAI(
+                api_key=config('API_KEY'),
+                base_url="https://chat.maritaca.ai/api"
+            )
+
+            response = client.chat.completions.create(
+              model="sabia-3",
+              messages=[
+                {"role": "user", "content": conteudo_mensagem_usuario},
+              ],
+              max_tokens=8000
+            )
+            mensagem_IA = response.choices[0].message.content 
+
+            nova_mensagem_IA = Mensagem(conversa=nova_conversa, texto=mensagem_IA, eh_do_usuario=False) #Salva resposta da IA
+            nova_mensagem_IA.save()
+
             redirect_url = reverse('chat', args=[nova_conversa.pk])
-            return JsonResponse({'success': True, 'message': f'Nova conversa: "{nome_conversa}" criada com sucesso!', 'redirect': redirect_url})
+            return JsonResponse({'success': True, "message": mensagem_IA, 'Nova conversa': f"{nome_conversa} criada com sucesso!", 'redirect': redirect_url})
         
         else:
             return JsonResponse({"success": False, "error": "Mensagem inválida"})
@@ -209,25 +246,6 @@ class DeleteView(LoginRequiredMixin, View):
         
         except Conversa.DoesNotExist:
             return JsonResponse({"success": False, "error": f"Conversa '{conversa_delete_nome}' não encontrada"}, status=404)
-        
-        except Exception as e:
-            return JsonResponse({"success": False, "error": str(e)}, status=500)
-        
-        except:
-            return JsonResponse({"success": False, "error": "Método não permitido"}, status=405)
-
-class PseudoIAView(LoginRequiredMixin, View):
-    def post(self, request, conversa_id):
-        try:
-            conversa = Conversa.objects.get(pk=conversa_id)
-            texto = "Sou a Pseudo-IA, em que posso ajudar?"
-            mensagem = Mensagem(conversa=conversa, texto=texto, eh_do_usuario = False)
-            mensagem.save()
-
-            return JsonResponse({"success": True, "message": texto}, status=200)
-        
-        except Conversa.DoesNotExist:
-            return JsonResponse({"success": False, "error": f"Conversa '{conversa.nome}' não encontrada"}, status=404)
         
         except Exception as e:
             return JsonResponse({"success": False, "error": str(e)}, status=500)

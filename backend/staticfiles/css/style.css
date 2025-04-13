@@ -360,7 +360,7 @@ button:hover.profile-btn, a:hover.profile-btn {
 .message {
   display: list;
   padding: 8px;
-  margin-bottom: 5px;
+  margin-bottom: 30px;
   border-radius: 4px;
   max-width: 70%;
   word-wrap: break-word;
@@ -378,6 +378,27 @@ button:hover.profile-btn, a:hover.profile-btn {
   background-color: #722F37;
   align-self: flex-start;
   margin-right: auto;
+}
+
+.message.bot > ol, ul{
+  margin-left: 20px;
+}
+
+#wait-message
+{
+  padding: 20px;
+  width: 7vw;
+  background-color: #722F37;
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  border-radius: 4px;
+}
+
+#wait-message > .dots{
+  padding: 5px;
+  border-radius: 50%;
+  background-color: #FFF;
 }
 
 /* ----------------------------------------------------

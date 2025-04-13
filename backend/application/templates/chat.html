@@ -13,6 +13,7 @@
   
   <link rel="stylesheet" href="{% static 'css/style.css' %}">
   <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script src="{% static 'js/script.js' %}"></script>
 
   <!--O VSCode pode reclamar de erro nas linhas abaixo, mas não há nada errado ;)-->
@@ -32,6 +33,17 @@
     <div class="sidebar" id="sidebar">
       <h2>Conversas</h2>
       <ul id="historyList">
+        {% if conversa_id is not None %}
+          <li class="conversation-item" data-id="new-chat" onclick="window.location.href='{% url 'new_chat' %}'">
+            <a class="conversation-title">Nova Conversa</a>
+            <img style="height: 20px; width: 20px; margin-right: 5px;" src="{% static 'img/pen-to-square.svg' %}" alt="Inicie uma nova conversa">
+          </li>
+        {% else %}
+          <li style="background-color: rgb(148, 63, 73);" class="conversation-item" data-id="new-chat" onclick="window.location.href='{% url 'new_chat' %}'">
+            <a class="conversation-title">Nova Conversa</a>
+            <img style="height: 20px; width: 20px; margin-right: 5px;" src="{% static 'img/pen-to-square.svg' %}" alt="Inicie uma nova conversa">
+          </li>
+        {% endif %}
          <!-- Lista de conversas gerada dinamicamente -->
       </ul>
     </div>
@@ -60,7 +72,7 @@
       <div class="chat-input">
         <button id="fileBtn" class="btn-file"><img style="width: 25px; height: 30px;" src="{% static 'img/paperclip.svg' %}" alt="Envie um PDF"></button>
         <input name="arquivo" type="file" id="fileInput" style="display:none;">
-        <input name="mensagem_usuario" type="text" autocomplete="off" id="messageInput" placeholder="Digite sua mensagem...">
+        <input name="mensagem_usuario" type="text" autocomplete="off" id="messageInput" contenteditable="true" placeholder="Digite sua mensagem...">
         <button id="audioBtn" class="btn-audio"><img style="width: 25px; height: 30px;" src="{% static 'img/microphone.svg' %}" alt="Envie um áudio"></button>
         <button id="sendBtn" class="btn-send">Enviar</button>
       </div>
