@@ -1,14 +1,59 @@
 {% extends 'base.html' %}
 {% load static %}
 {% block content %}
+    <title>SamsAI | Cadastro</title>
+
     <!-- Formulário de Cadastro -->
     <form id="registerForm" class="register-form" method="post" action="{% url 'cadastro' %}">
         {% csrf_token %}
-        <input name="nome" type="text" id="registerName" placeholder="Nome">
-        <input name="email" type="email" id="registerEmail" placeholder="Email">
-        <input name="senha1" type="password" id="registerPassword1" placeholder="Crie uma senha">
-        <input name="senha2" type="password" id="registerPassword2" placeholder="Digite novamente a senha">
-        <p id="registerError" class="error-message"></p>
-        <button id="createAccountBtn">Criar Conta</button>
+        <div class="input-container">
+            <legend>Digite o nome de usuário:</legend>
+            <input name="nome" type="text" id="registerName" placeholder="Nome"
+            maxlength="30"
+            data-parsley-required="true"
+            data-parsley-pattern="^[a-zA-ZÀ-ÖØ-öø-ÿ]+(\s[a-zA-ZÀ-ÖØ-öø-ÿ]+)*$"
+            data-parsley-trigger="change"
+            data-parsley-required-message="Campo Obrigatório"
+            data-parsley-error-message="Entre um nome válido"
+            >
+        </div>
+
+        <div class="input-container">
+            <legend class="input-margin">Digite o email:</legend>
+            <input name="email" type="email" id="registerEmail" placeholder="Email"
+            data-parsley-trigger="change" data-parsley-error-message="Entre um e-mail válido."
+            data-parsley-required="true"
+            >
+        </div>
+
+        <div class="input-container">
+            <legend class="input-margin">Crie uma senha:</legend>
+            <input name="senha1" type="password" id="registerPassword1" placeholder="Crie uma senha"
+            maxlength="30"
+            data-parsley-required="true"
+            data-parsley-trigger="change"
+            data-parsley-required-message="Campo obrigatório."
+            >
+        </div>
+
+        <div class="input-container">
+            <legend class="input-margin">Confirme a senha:</legend>
+            <input name="senha2" type="password" id="registerPassword2" placeholder="Digite novamente a senha"
+            maxlength="30"
+            data-parsley-required="true"
+            data-parsley-trigger="change"
+            data-parsley-required-message="Campo obrigatório."
+            data-parsley-confirma-senha="#registerPassword1"
+            data-parsley-confirma-senha-message="As senhas não são iguais!"
+            >
+        </div>
+        
+        <button id="createAccountBtn" class="input-margin">Criar Conta</button>
     </form>
+
+    <script>
+        $(document).ready(function () {
+        $('#registerForm').parsley();
+      });
+    </script>
 {% endblock %}

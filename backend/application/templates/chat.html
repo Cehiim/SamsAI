@@ -13,6 +13,7 @@
   
   <link rel="stylesheet" href="{% static 'css/style.css' %}">
   <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script src="{% static 'js/script.js' %}"></script>
 
   <!--O VSCode pode reclamar de erro nas linhas abaixo, mas não há nada errado ;)-->
@@ -30,8 +31,19 @@
 <body>
   <div id="chatContainer" class="chat-container">
     <div class="sidebar" id="sidebar">
-      <h2>Histórico de Conversas</h2>
+      <h2>Conversas</h2>
       <ul id="historyList">
+        {% if conversa_id is not None %}
+          <li class="conversation-item" data-id="new-chat" onclick="window.location.href='{% url 'new_chat' %}'">
+            <a class="conversation-title">Nova Conversa</a>
+            <img style="height: 20px; width: 20px; margin-right: 5px;" src="{% static 'img/pen-to-square.svg' %}" alt="Inicie uma nova conversa">
+          </li>
+        {% else %}
+          <li style="background-color: rgb(148, 63, 73);" class="conversation-item" data-id="new-chat" onclick="window.location.href='{% url 'new_chat' %}'">
+            <a class="conversation-title">Nova Conversa</a>
+            <img style="height: 20px; width: 20px; margin-right: 5px;" src="{% static 'img/pen-to-square.svg' %}" alt="Inicie uma nova conversa">
+          </li>
+        {% endif %}
          <!-- Lista de conversas gerada dinamicamente -->
       </ul>
     </div>
@@ -39,8 +51,8 @@
     <div class="chat-section" id="chatSection">
       <div class="chat-header">
         <h1>SamsAI</h1>
-        <div class="profile-container">
-          <span id="profileIcon" class="profile-icon">👤</span>
+        <div id="profileIcon" class="profile-container">
+          <span class="profile-icon"><img style="width: 40px; height: 40px;" src="{% static 'img/user.svg' %}" alt="Perfil"></span>
           <div id="profileDropdown" class="profile-dropdown"> 
             <a id="logoutBtn" href="{% url 'logout' %}" class="profile-btn">Sair</a>
             <button id="configBtn" class="profile-btn">Configurações</button>
@@ -49,17 +61,19 @@
       </div>
       <div class="chat-window" id="chatWindow">
         {% if conversa_id is None %}
-          <p>Olá, {{ usuario }}. Digite sua mensagem para iniciar uma nova conversa.</p>
-          <!--Cria coisa pra página nova (chat/new)-->
+        <div class="welcome-message">
+          <p>Olá, {{ usuario }}</p>
+          <p>Como posso ajudar?</p>
+        </div>
         {% else %}
           <!--Mensagens renderizadas pelo Javascript-->
         {% endif %}
       </div>
       <div class="chat-input">
-        <button id="fileBtn" class="btn-file">📎</button>
-        <input type="file" id="fileInput" style="display:none;">
-        <input name="mensagem_usuario" type="text" id="messageInput" placeholder="Digite sua mensagem...">
-        <button id="audioBtn" class="btn-audio">🎤</button>
+        <button id="fileBtn" class="btn-file"><img style="width: 25px; height: 30px;" src="{% static 'img/paperclip.svg' %}" alt="Envie um PDF"></button>
+        <input name="arquivo" type="file" id="fileInput" style="display:none;">
+        <input name="mensagem_usuario" type="text" autocomplete="off" id="messageInput" contenteditable="true" placeholder="Digite sua mensagem...">
+        <button id="audioBtn" class="btn-audio"><img style="width: 25px; height: 30px;" src="{% static 'img/microphone.svg' %}" alt="Envie um áudio"></button>
         <button id="sendBtn" class="btn-send">Enviar</button>
       </div>
     </div>

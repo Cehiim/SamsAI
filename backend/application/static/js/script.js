@@ -21,11 +21,9 @@ function initLoginPage() {
   const passwordInput    = document.getElementById("passwordInput");
   const loginBtn         = document.getElementById("loginBtn");
   const loginError       = document.getElementById("loginError");
-  const showRegisterBtn  = document.getElementById("showRegisterBtn");
   const registerName     = document.getElementById("registerName");
   const registerEmail    = document.getElementById("registerEmail");
   const registerPassword = document.getElementById("registerPassword");
-  const registerError    = document.getElementById("registerError");
   const createAccountBtn = document.getElementById("createAccountBtn");
   const cancelRegisterBtn= document.getElementById("cancelRegisterBtn");
 
@@ -55,16 +53,11 @@ function initLoginPage() {
   // Configuração dos event listeners
   // ---------------------------
   // Exibe o formulário de cadastro
-  showRegisterBtn.addEventListener("click", () => {
-    loginForm.style.display = "none";
-    registerForm.style.display = "flex";
-  });
 
   // Cancela o cadastro e volta para o formulário de login
   cancelRegisterBtn.addEventListener("click", () => {
     registerForm.style.display = "none";
     loginForm.style.display = "flex";
-    registerError.textContent = "";
     registerEmail.value = "";
     registerPassword.value = "";
     registerName.value = "";
@@ -76,15 +69,6 @@ function initLoginPage() {
     const email    = registerEmail.value.trim();
     const password = registerPassword.value.trim();
     
-    if (!isValidEmail(email)) {
-      registerError.textContent = "Por favor, insira um email válido.";
-      return;
-    }
-    if (!isValidPassword(password)) {
-      registerError.textContent = "A senha deve ter pelo menos 10 caracteres, incluir números e uma letra maiúscula.";
-      return;
-    }
-    
     registeredUsers[email] = password;
     localStorage.setItem("registeredUsers", JSON.stringify(registeredUsers));
     alert("Conta criada com sucesso!");
@@ -93,7 +77,6 @@ function initLoginPage() {
     usernameInput.value = email;
     registerForm.style.display = "none";
     loginForm.style.display = "flex";
-    registerError.textContent = "";
     registerEmail.value = "";
     registerPassword.value = "";
     registerName.value = "";
@@ -164,17 +147,22 @@ function initChatPage() {
   }
   // Renderiza a lista de conversas na barra lateral
   function renderConversationsSidebar() {
-    historyList.innerHTML = "";
+    //historyList.innerHTML = "";
     conversations.forEach(conv => {
       // Cria o item da conversa
       const li = document.createElement("li");
       li.classList.add("conversation-item");
       li.setAttribute("data-id", conv.pk);
-      
+      li.setAttribute("onclick", `window.location.href='/chat/${conv.pk}'`);
+
+      if (conversa_id == conv.pk)
+      {
+        li.setAttribute("style", "background-color:rgb(148, 63, 73)");
+      }
+
       // Título da conversa (com limite de caracteres)
       const titleA = document.createElement("a");
       titleA.classList.add("conversation-title");
-      titleA.href = `./${conv.pk}`;
       titleA.textContent = conv.fields.nome;
       
       // Ícone de opções (representado por "...")
@@ -397,14 +385,6 @@ function initChatPage() {
   renderConversationsSidebar();
 
   // ---------------------------
-  // Funções de carregamento e salvamento das conversas
-  // ---------------------------
-
-  function saveConversations(conversations) {
-    localStorage.setItem("conversations", JSON.stringify(conversations));
-  }
-
-  // ---------------------------
   // Obtenção dos parâmetros da URL e seleção da conversa atual
   // ---------------------------
   var currentConversation = false;
@@ -424,66 +404,126 @@ function initChatPage() {
     chatWindow.innerHTML = "";
     mensagens.forEach(msg => {
       const msgDiv = document.createElement("div");
-      if(msg.fields.eh_do_usuario)
-        msgDiv.classList.add("message", "user");
-      else
-        msgDiv.classList.add("message", "bot");
 
-      msgDiv.textContent = msg.fields.texto;
+      let content = msg.fields.texto;
+      if(msg.fields.eh_do_usuario)
+      {
+        msgDiv.classList.add("message", "user");
+      }
+      else
+      {
+        msgDiv.classList.add("message", "bot");
+        content = marked.parse(msg.fields.texto);
+      }
+
+      msgDiv.innerHTML = content;
+      msgDiv.style.whiteSpace = "pre-line";
       chatWindow.appendChild(msgDiv);
     });
+
+    ultimaMensagem = mensagens[mensagens.length - 1];
+
+    if(ultimaMensagem.fields.eh_do_usuario)
+    {
+      const waitMessageDiv = document.createElement("div");
+      waitMessageDiv.id = "wait-message";
+
+      let dot = null;
+      for (let i = 0; i < 3; i++) {
+        dot = document.createElement("div");
+        dot.classList.add("dots");
+        waitMessageDiv.appendChild(dot);
+      }
+      chatWindow.appendChild(waitMessageDiv);
+    }
+
     chatWindow.scrollTop = chatWindow.scrollHeight;
   }
+
+  function startLoadingAnimation() {
+  const dots = document.querySelectorAll("#wait-message .dots");
+  let index = 0;
+  console.log(dots);
+  animationInterval = setInterval(() => {
+    dots.forEach((dot, i) => {
+      dot.style.marginBottom = (i === index) ? "8px" : "0px";
+    });
+    index = (index + 1) % dots.length;
+  }, 300);
+}
+
+function stopLoadingAnimation() {
+  clearInterval(animationInterval);
+  animationInterval = null;
+
+  // Resetar os pontos
+  const dots = document.querySelectorAll("#wait-message .dots");
+  dots.forEach(dot => dot.style.marginBottom = "0px");
+}
 
   // ---------------------------
   // Configuração dos eventos de envio de mensagem
   // ---------------------------
   sendBtn.addEventListener("click", () => {
     const messageText = messageInput.value.trim();
-    if (messageText === "") return;
-    // Adiciona mensagem do usuário e salva
-    
+    if (messageText == "")
+      return;
+    else
+        messageInput.value = "";
+
     // Enviar atualização para o back-end via Fetch API (AJAX)
     let conv_id;
     if (conversa_id == "None")
-      {conv_id = "new";}
-    else
-      {conv_id = conversa_id;}
-
-    fetch(`/chat/${conv_id}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-CSRFToken": getCSRFToken(), // Capturar o CSRF Token do Django
-      },
-      body: JSON.stringify({ message: messageText }),
-    })
-    .then(response => response.json())
-    .then(data => {
-      if (data.success) {
-        console.log("Mensagem salva com sucesso!");
-        if(conversa_id == "None")
-          window.location.href = data.redirect;
-      } else {
-        console.error("Erro ao salvar mensagem:", data.error);
+      {
+        conv_id = "new";
       }
-    })
-    .catch(error => console.error("Erro na requisição:", error));
+    else
+      {
+        conv_id = conversa_id;
+        mensagens.push({fields:{texto: messageText, eh_do_usuario: true}});
+        // Adiciona mensagem do usuário e salva
+        renderMessages(); // Exibe nova mensagem do usuário
+        startLoadingAnimation(); //Exibe animação de espera
+      }
 
-    //Envia requisição para IA
+      async function enviarMensagem(messageText, conv_id) {
+        try {
+          const response = await fetch(`/chat/${conv_id}`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-CSRFToken": getCSRFToken(),
+            },
+            body: JSON.stringify({ message: messageText }),
+          });
+      
+          const data = await response.json();
+      
+          if (data.success) {
+            console.log("Mensagem salva com sucesso!");
+      
+            // IA respondeu — você pode adicionar a mensagem
 
-    mensagens.push({fields:{texto: messageText, eh_do_usuario: true}});
-    saveConversations(conversations);
-    renderMessages();
-    messageInput.value = "";
-    messageInput.style.height = "auto";
+            if (conversa_id === "None") {
+              window.location.href = data.redirect;
+            }
+            else{
+              mensagens.push({fields: { texto: data.message, eh_do_usuario: false }});
+              stopLoadingAnimation(); //Encerra animação
+            }
+      
+            renderMessages(); // Mostra resposta da IA
+
+          } else {
+            console.error("Erro ao salvar mensagem:", data.error);
+          }
+        } catch (error) {
+          console.error("Erro na requisição:", error);
+        }
+        
+      }
     
-    // Simula resposta do bot após 500ms
-    setTimeout(() => {
-      conversations.push({fields: { texto: "Estou aqui para ajudar!", eh_do_usuario: false }});
-      saveConversations(conversations);
-      renderMessages();
-    }, 500);
+    enviarMensagem(messageText, conv_id);
   });
 
   //Desabilita envio se o input estiver vazio
@@ -506,27 +546,40 @@ function initChatPage() {
   fileInput.addEventListener("change", () => {
     if (fileInput.files.length > 0) {
       const file = fileInput.files[0];
-      currentConversation.messages.push({ text: "Arquivo enviado: " + file.name, sender: "user" });
-      saveConversations(conversations);
+      const formData = new FormData();
+
+      formData.append("arquivo", file);
+      formData.append("titulo", file.name);
+
+      // Enviar PDF para o back-end via Fetch API (AJAX)
+        fetch(`/upload/${conversa_id}`, {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': getCSRFToken()
+          },
+          body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            console.log(data.message);
+          } else {
+            console.error("Erro ao salvar mensagem:", data.error);
+          }
+        })
+        .catch(error => console.error("Erro na requisição:", error));
+
       renderMessages();
       fileInput.value = "";
-      // Resposta simulada do bot
-      setTimeout(() => {
-        currentConversation.messages.push({ text: "Arquivo recebido. Em breve responderei!", sender: "bot" });
-        saveConversations(conversations);
-        renderMessages();
-      }, 500);
     }
   });
   
   // Simulação de envio de áudio
   audioBtn.addEventListener("click", () => {
     currentConversation.messages.push({ text: "Áudio enviado (simulação).", sender: "user" });
-    saveConversations(conversations);
     renderMessages();
     setTimeout(() => {
       currentConversation.messages.push({ text: "Áudio recebido. Vou processar a informação!", sender: "bot" });
-      saveConversations(conversations);
       renderMessages();
     }, 500);
   });

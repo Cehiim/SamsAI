@@ -1,6 +1,6 @@
 from django.shortcuts import redirect, render
 from django.views import View
-from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse, Http404
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse
 from django.contrib.auth import login, logout
@@ -11,6 +11,8 @@ from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.core import serializers
 import json
+import openai
+from decouple import config
 
 class LoginView(View):
     def get(self, request):
@@ -33,14 +35,19 @@ class LoginView(View):
             senha = request.POST.get("senha")
             usuario = User.objects.get(email=email)
 
-            if usuario is not None and usuario.is_active and check_password(senha, usuario.password):
-                login(request, usuario)
-                return HttpResponseRedirect(reverse('new_chat'))
-            else:
-                messages.error(request, "email ou senha incorretos")
+            if usuario is None:
+                messages.error(request, "Email não cadastrado ou incorreto")
+                return render(request, "login.html")
+            
+            if not check_password(senha, usuario.password) and usuario.is_active:
+                messages.error(request, "Senha incorreta")
+                return render(request, "login.html")
+
+            login(request, usuario)
+            return HttpResponseRedirect(reverse('new_chat'))
         
         except Exception as e:
-            messages.error(request, "email ou senha incorretos")
+            messages.error(request, "Email não cadastrado ou incorreto")
         
         return render(request, "login.html")
     
@@ -68,6 +75,9 @@ class CadastroView(View):
                 novo_usuario.save()
                 login(request, novo_usuario)
                 return HttpResponseRedirect(reverse('new_chat'))
+            else:
+                messages.error(request, "Não foi possível realizar o cadastro. Verifique os dados e tente novamente")
+                return render(request, "cadastro.html")
             
         except:
             messages.error(request, "Não foi possível realizar o cadastro. Verifique os dados e tente novamente")
@@ -75,9 +85,15 @@ class CadastroView(View):
 
 
 class ChatBotView(LoginRequiredMixin, View):
-    def get(self, request, conversa_id):    
-        conversa_atual = Conversa.objects.get(pk=conversa_id)
-        usuario = conversa_atual.usuario
+    def get(self, request, conversa_id):
+        try:    
+            conversa_atual = Conversa.objects.get(pk=conversa_id)
+            if conversa_atual.usuario != request.user:
+                raise Http404("Conversa não encontrada")
+        except Conversa.DoesNotExist:
+            raise Http404("Conversa não encontrada")
+        
+        usuario = request.user
 
         queryset_conversas = Conversa.objects.filter(usuario=usuario).order_by('-data')
         todas_as_conversas = serializers.serialize('json', queryset_conversas)
@@ -96,16 +112,36 @@ class ChatBotView(LoginRequiredMixin, View):
         }
         return render(request, 'chat.html', context)
     
-    def post(self, request, conversa_id): # TODO: (AJAX) Arranjar um jeito melhor de renderizar as conversas
+    def post(self, request, conversa_id): # TODO: (AJAX) Arranjar um jeito melhor de renderizar as conversas      
         try:
             data = json.loads(request.body)
             conversa_atual = Conversa.objects.get(pk=conversa_id)
-            conteudo_mensagem = data.get("message") #extrai conteúdo da mensagem
+            if conversa_atual.usuario != request.user:
+                return JsonResponse({"success": False, "error": "Conversa não encontrada"}, status=404)
 
-            nova_mensagem = Mensagem(conversa=conversa_atual, texto=conteudo_mensagem) #Cria nova mensagem
-            nova_mensagem.save()
+            conteudo_mensagem_usuario = data.get("message") #extrai conteúdo da mensagem
 
-            return JsonResponse({"success": True, "message": f"Mensagem salva com sucesso!"}, status=200)
+            nova_mensagem_usuario = Mensagem(conversa=conversa_atual, texto=conteudo_mensagem_usuario) #Cria nova mensagem
+            nova_mensagem_usuario.save()
+
+            client = openai.OpenAI(
+                api_key=config('API_KEY'),
+                base_url="https://chat.maritaca.ai/api"
+            )
+
+            response = client.chat.completions.create(
+              model="sabia-3",
+              messages=[
+                {"role": "user", "content": conteudo_mensagem_usuario},
+              ],
+              max_tokens=8000
+            )
+            mensagem_IA = response.choices[0].message.content 
+
+            nova_mensagem_IA = Mensagem(conversa=conversa_atual, texto=mensagem_IA, eh_do_usuario=False) #Salva resposta da IA
+            nova_mensagem_IA.save()
+
+            return JsonResponse({"success": True, "message": mensagem_IA}, status=200)
         
         except Conversa.DoesNotExist:
             return JsonResponse({"success": False, "error": "Conversa não encontrada"}, status=404)
@@ -135,20 +171,38 @@ class NewChatBotView(LoginRequiredMixin, View):
     def post(self, request):
         usuario = User.objects.get(pk=request.user.pk)
         data = json.loads(request.body)
-        conteudo_mensagem = data.get("message") #extrai conteúdo da mensagem
+        conteudo_mensagem_usuario = data.get("message") #extrai conteúdo da mensagem
 
-        if len(conteudo_mensagem) >= 1:
-            if len(conteudo_mensagem) > 20:
-                nome_conversa = conteudo_mensagem[:20] + "..."
+        if len(conteudo_mensagem_usuario) >= 1:
+            if len(conteudo_mensagem_usuario) > 20:
+                nome_conversa = conteudo_mensagem_usuario[:20] + "..."
             else:
-                nome_conversa = conteudo_mensagem
+                nome_conversa = conteudo_mensagem_usuario
             
             nova_conversa = Conversa(usuario=usuario, nome=nome_conversa) #Cria nova conversa
             nova_conversa.save()
-            nova_mensagem = Mensagem(conversa=nova_conversa, texto=conteudo_mensagem) #Cria nova mensagem
+            nova_mensagem = Mensagem(conversa=nova_conversa, texto=conteudo_mensagem_usuario) #Cria nova mensagem
             nova_mensagem.save()
+            
+            client = openai.OpenAI(
+                api_key=config('API_KEY'),
+                base_url="https://chat.maritaca.ai/api"
+            )
+
+            response = client.chat.completions.create(
+              model="sabia-3",
+              messages=[
+                {"role": "user", "content": conteudo_mensagem_usuario},
+              ],
+              max_tokens=8000
+            )
+            mensagem_IA = response.choices[0].message.content 
+
+            nova_mensagem_IA = Mensagem(conversa=nova_conversa, texto=mensagem_IA, eh_do_usuario=False) #Salva resposta da IA
+            nova_mensagem_IA.save()
+
             redirect_url = reverse('chat', args=[nova_conversa.pk])
-            return JsonResponse({'success': True, 'message': f'Nova conversa: "{nome_conversa}" criada com sucesso!', 'redirect': redirect_url})
+            return JsonResponse({'success': True, "message": mensagem_IA, 'Nova conversa': f"{nome_conversa} criada com sucesso!", 'redirect': redirect_url})
         
         else:
             return JsonResponse({"success": False, "error": "Mensagem inválida"})
@@ -159,6 +213,10 @@ class RenameView(LoginRequiredMixin, View):
         try:
             data = json.loads(request.body)
             conversa = Conversa.objects.get(pk=conversa_id)
+
+            if conversa.usuario != request.user:
+                raise JsonResponse({"success": False, "error": "Conversa não encontrada"}, status=404)
+
             conversa.nome = data.get("nome", conversa.nome)
             conversa.save()
 
@@ -177,6 +235,10 @@ class DeleteView(LoginRequiredMixin, View):
     def post(self, request, conversa_id):
         try:
             conversa_delete = Conversa.objects.get(pk=conversa_id)
+
+            if conversa_delete.usuario != request.user:
+                raise JsonResponse({"success": False, "error": "Conversa não encontrada"}, status=404)
+
             conversa_delete_nome = conversa_delete.nome
             conversa_delete.delete()
             
@@ -191,15 +253,14 @@ class DeleteView(LoginRequiredMixin, View):
         except:
             return JsonResponse({"success": False, "error": "Método não permitido"}, status=405)
 
-class PseudoIAView(LoginRequiredMixin, View):
+class UploadView(LoginRequiredMixin, View):
     def post(self, request, conversa_id):
         try:
             conversa = Conversa.objects.get(pk=conversa_id)
-            texto = "Sou a Pseudo-IA, em que posso ajudar?"
-            mensagem = Mensagem(conversa=conversa, texto=texto, eh_do_usuario = False)
-            mensagem.save()
+            arquivo = request.FILES["arquivo"]
+            documento = Documento.objects.create(titulo=str(arquivo), arquivo=arquivo, conversa=conversa)
 
-            return JsonResponse({"success": True, "message": texto}, status=200)
+            return JsonResponse({'success': True, 'message': 'Upload feito com sucesso!'})
         
         except Conversa.DoesNotExist:
             return JsonResponse({"success": False, "error": f"Conversa '{conversa.nome}' não encontrada"}, status=404)
@@ -209,6 +270,7 @@ class PseudoIAView(LoginRequiredMixin, View):
         
         except:
             return JsonResponse({"success": False, "error": "Método não permitido"}, status=405)
+
 
             
             

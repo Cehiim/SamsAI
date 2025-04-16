@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+
 /* ----------------------------------------------------
    RESET E ESTILOS GERAIS
 ---------------------------------------------------- */
@@ -8,8 +10,8 @@
 }
 
 body {
-  font-family: Arial, sans-serif;
-  background-color: #1f1f1f;
+  font-family: Inter, Arial, sans-serif;
+  background-color: #212121;
   color: #fff;
 }
 /* ----------------------------------------------------
@@ -42,14 +44,13 @@ p.not_found_message{
   justify-content: center;
   align-items: center;
   height: 100vh;
-  background-color: #1f1f1f;
+  background-color: #212121;
 }
 
 .login-box {
-  border: 2px solid #444;
   padding: 20px;
   border-radius: 8px;
-  background-color: #333;
+  background-color: #722F37;
   width: 320px;
   text-align: center;
 }
@@ -67,13 +68,33 @@ p.not_found_message{
 
 .login-form input,
 .register-form input {
-  margin-bottom: 10px;
   padding: 10px;
   border: none;
+  width: 100%;
   border-radius: 4px;
-  background-color: #222;
-  color: #fff;
+  background-color: #FFF;
+  color: #000000;
   font-size: 1rem;
+}
+
+.input-container{
+  margin-bottom: 10px;
+}
+
+.login-form input:focus,
+.register-form input:focus {
+  outline: 0 solid #722F37;
+}
+
+.input-container > legend{
+  text-align: left;
+  margin-bottom: 3px;
+  font-size: 1rem;
+}
+
+.input-margin
+{
+  padding-top: 10px;
 }
 
 .login-form button,
@@ -81,21 +102,15 @@ p.not_found_message{
   padding: 10px;
   border: none;
   border-radius: 4px;
-  background-color: #444;
-  color: #fff;
+  background-color: #FFF;
+  color: #000;
   cursor: pointer;
   font-size: 1rem;
 }
 
 .login-form button:hover,
 .register-form button:hover {
-  background-color: #555;
-}
-
-.error-message {
-  color: #ff6666;
-  margin-top: 5px;
-  font-size: 0.9rem;
+  background-color: #d0d0d0;
 }
 
 .messages{
@@ -109,9 +124,10 @@ p.not_found_message{
 }
 
 .messages > .alert.alert-error{
-  background-color: #ff6666;
+  background-color: #ff2626;
   padding-bottom: 10px;
   padding-top: 10px;
+  border-radius: 10px;
 }
 
 .messages > .alert.alert-success{
@@ -147,7 +163,7 @@ p.not_found_message{
   left: 0;
   bottom: 0;
   width: 250px;
-  background-color: #262626;
+  background-color: #542227; 
   transition: transform 0.3s ease;
   transform: translateX(0);
   overflow: visible;
@@ -159,7 +175,8 @@ p.not_found_message{
 
 .sidebar h2 {
   margin: 20px;
-  font-size: 1.2rem;
+  font-size: 1.5rem;
+  text-align: center;
 }
 
 .sidebar ul {
@@ -169,7 +186,6 @@ p.not_found_message{
 }
 
 .sidebar ul li {
-  margin-bottom: 10px;
   cursor: pointer;
 }
 
@@ -200,6 +216,7 @@ p.not_found_message{
   flex-direction: column;
   width: 100%;
   height: 100%;
+  background-color: #212121;
 }
 
 .sidebar.collapsed ~ .chat-section {
@@ -208,24 +225,37 @@ p.not_found_message{
 
 .chat-header {
   position: relative;
-  padding: 10px;
-  background-color: #333;
+  padding: 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
 .chat-header h1 {
-  font-size: 1.5rem;
+  font-size: 2.5rem;
+}
+
+.welcome-message
+{
+  color: #CE5967;
+  font-size: 4.6875em;
+  font-weight: bold;
+  padding-left: 1.5em;
 }
 
 .profile-container {
   position: relative;
+  height: 60px;
+  width: 60px;
+  padding-top: 10px;
+  background-color: #722F37;
+  border-radius: 30px;
 }
 
 .profile-icon {
   font-size: 1.5rem;
   cursor: pointer;
+  padding-left: 10px;
 }
 
 .profile-dropdown {
@@ -233,8 +263,7 @@ p.not_found_message{
   position: absolute;
   top: 30px;
   right: 0;
-  background-color: #444;
-  border: 1px solid #555;
+  background-color: rgb(148, 63, 73);
   border-radius: 4px;
   z-index: 1000;
 }
@@ -264,7 +293,7 @@ a.profile-btn {
 }
 
 button:hover.profile-btn, a:hover.profile-btn {
-  background-color: #555;
+  background-color: rgb(187, 78, 91);
 }
 
 .chat-window {
@@ -279,22 +308,25 @@ button:hover.profile-btn, a:hover.profile-btn {
   display: flex;
   align-items: center;
   padding: 5px;
-  background-color: #333;
+  background-color: #212121;
+  height: 55px;
 }
 
 .chat-input input[type="text"] {
   flex: 1;
+  height: 100%;
   padding: 5px 8px;
   margin: 0 5px;
   border-radius: 4px;
   border: none;
   background-color: #444;
   color: #fff;
-  font-size: 0.9rem;
+  font-size: 1.1em;
 }
 
 .chat-input input[type="text"]:focus {
-  outline: 2px solid #555;
+  outline: 0 solid #444;
+  height: 100%;
 }
 
 .btn-file,
@@ -303,12 +335,18 @@ button:hover.profile-btn, a:hover.profile-btn {
   background-color: #444;
   border: none;
   color: #fff;
-  padding: 5px;
+  height: 50px;
+  width: 50px;
   border-radius: 4px;
   cursor: pointer;
   margin-right: 5px;
-  font-size: 0.9rem;
 }
+
+.btn-send {
+  width: 70px;
+  font-size: 1.1em;
+}
+
 
 .btn-file:hover,
 .btn-audio:hover,
@@ -320,24 +358,47 @@ button:hover.profile-btn, a:hover.profile-btn {
    MENSAGENS
 ---------------------------------------------------- */
 .message {
-  display: inline-block;
+  display: list;
   padding: 8px;
-  margin-bottom: 5px;
+  margin-bottom: 30px;
   border-radius: 4px;
   max-width: 70%;
   word-wrap: break-word;
+  font-size: 1.1em;
 }
 
 .message.user {
-  background-color: #666;
+  background-color: #DCDCDC;
   align-self: flex-end;
   margin-left: auto;
+  color: #000;
 }
 
 .message.bot {
-  background-color: #444;
+  background-color: #722F37;
   align-self: flex-start;
   margin-right: auto;
+}
+
+.message.bot > ol, ul{
+  margin-left: 20px;
+}
+
+#wait-message
+{
+  padding: 20px;
+  width: 7vw;
+  background-color: #722F37;
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  border-radius: 4px;
+}
+
+#wait-message > .dots{
+  padding: 5px;
+  border-radius: 50%;
+  background-color: #FFF;
 }
 
 /* ----------------------------------------------------
@@ -486,7 +547,12 @@ body.light-theme .login-container {
   display: flex;
   align-items: center;
   justify-content: space-between; /* título à esquerda, "..." à direita */
-  padding: 5px 0;
+  padding: 10px 0 10px 10px;
+  border-radius: 6px;
+}
+
+.conversation-item:hover{
+  background-color: #722F37;
 }
 
 .conversation-container .chat-window {
@@ -502,26 +568,6 @@ body.light-theme .login-container {
   padding: 8px;
   border-radius: 4px;
   word-wrap: break-word;
-}
-
-.conversation-container .chat-window .user {
-  align-self: flex-end;
-  background-color: #666;
-  color: #fff;
-}
-
-.conversation-container .chat-window .bot {
-  align-self: flex-start;
-  background-color: #444;
-  color: #fff;
-}
-
-.conversation-container .chat-input {
-  padding: 10px;
-  background-color: #222;
-  display: flex;
-  align-items: flex-end;
-  gap: 5px;
 }
 
 .conversation-container .btn-file,
@@ -579,11 +625,10 @@ body.light-theme .login-container {
   top: 50%;
   left: 100%;
   transform: translate(0, -50%); 
-  background: #444;
-  border: 1px solid #555;
+  background: rgb(148, 63, 73);
   border-radius: 4px;
   padding: 5px;
-  z-index: 100;
+  z-index: 10;
 }
 
 .inline-popup button {
@@ -594,17 +639,18 @@ body.light-theme .login-container {
   display: block;
   padding: 5px;
   width: 100%;
-  text-align: left;
+  text-align: center;
 }
 
 .inline-popup button:hover {
-  background-color: #555;
+  background-color: rgb(187, 78, 91);
+  border-radius: 4px;
 }   
 
 .options-icon {
   float: right;
   cursor: pointer;
-  padding: 0 5px;
+  padding: 0 10px 5px 0;
   user-select: none;
   font-size: 1rem;
 }
