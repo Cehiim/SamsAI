@@ -37,6 +37,7 @@ document.addEventListener("DOMContentLoaded", function() {
   const configModal   = document.getElementById("configModal");
   const closeModal    = document.getElementById("closeModal");
   const configForm    = document.getElementById("configForm");
+  const PromptInput   = document.getElementById("prompt-input");
 
   // Variáveis auxiliares para ações modais
   let currentAction = null;
@@ -264,6 +265,26 @@ document.addEventListener("DOMContentLoaded", function() {
     document.body.style.fontSize   = fontSize;
     document.body.style.fontFamily = fontFamily;
     configModal.style.display = "none";
+    let new_prompt = PromptInput.value
+
+    // Atualiza prompt com instrução para IA no back-end via Fetch API (AJAX)
+    fetch("/change-prompt", {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': getCSRFToken()
+      },
+      body: JSON.stringify({ message: new_prompt })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        console.log(data.message);
+      } else {
+        console.error("Erro ao atualizar prompt :", data.error);
+      }
+    })
+    .catch(error => console.error("Erro na requisição:", error));
+
   });
 
   // Renderiza a lista de conversas ao carregar a página

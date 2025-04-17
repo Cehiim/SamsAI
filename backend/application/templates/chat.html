@@ -102,6 +102,7 @@
       </span>
       <h2>Configurações</h2>
       <form id="configForm">
+        {% csrf_token %}
         <div class="config-section">
           <label>Escolha o tema:</label>
           <div>
@@ -133,7 +134,7 @@
         </div>
         <div class="prompt-input-section">
           <legend id="PromptInputLegend">Como o SamsAI deveria te responder?</legend>
-          <textarea id="prompt-input" name="prompt-usuario" type="text" autocomplete="off"></textarea>
+          <textarea id="prompt-input" name="prompt-usuario" type="text" autocomplete="off">{{ prompt_instrucao }}</textarea>
         </div>
         <button type="submit" class="config-save-btn">Salvar</button>
       </form>
