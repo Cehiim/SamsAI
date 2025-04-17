@@ -5,7 +5,6 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse
 from django.contrib.auth import login, logout
 from .models import *
-from django.contrib.auth.models import User
 from django.contrib.auth.hashers import check_password
 from django.contrib import messages
 from django.core.exceptions import ValidationError
@@ -19,7 +18,7 @@ class LoginView(View):
         if request.user.is_authenticated:
             return HttpResponseRedirect(reverse('new_chat'))
         
-        usuarios = User.objects.all()
+        usuarios = Usuario.objects.all()
 
         context = {
             "usuarios": usuarios
@@ -33,7 +32,7 @@ class LoginView(View):
         try:
             email = request.POST.get("email")
             senha = request.POST.get("senha")
-            usuario = User.objects.get(email=email)
+            usuario = Usuario.objects.get(email=email)
 
             if usuario is None:
                 messages.error(request, "Email não cadastrado ou incorreto")
@@ -70,7 +69,7 @@ class CadastroView(View):
 
             ###TODO: Elaborar métodos de validação melhores nas views no front###
             if username != "" and email != "" and senha1 == senha2: 
-                novo_usuario = User(username=username, email=email)
+                novo_usuario = Usuario(username=username, email=email)
                 novo_usuario.set_password(senha1)
                 novo_usuario.save()
                 login(request, novo_usuario)
@@ -155,7 +154,7 @@ class ChatBotView(LoginRequiredMixin, View):
 
 class NewChatBotView(LoginRequiredMixin, View):
     def get(self, request):
-        usuario = User.objects.get(pk=request.user.pk)
+        usuario = request.user
         
         queryset_conversas = Conversa.objects.filter(usuario=usuario).order_by('-data')
         todas_as_conversas = serializers.serialize('json', queryset_conversas)
@@ -169,7 +168,7 @@ class NewChatBotView(LoginRequiredMixin, View):
         return render(request, "chat.html", context)
     
     def post(self, request):
-        usuario = User.objects.get(pk=request.user.pk)
+        usuario = request.user
         data = json.loads(request.body)
         conteudo_mensagem_usuario = data.get("message") #extrai conteúdo da mensagem
 
@@ -270,6 +269,10 @@ class UploadView(LoginRequiredMixin, View):
         
         except:
             return JsonResponse({"success": False, "error": "Método não permitido"}, status=405)
+
+class ChangePromptView(LoginRequiredMixin, View):
+    def post(self, request):
+        pass
 
 
             

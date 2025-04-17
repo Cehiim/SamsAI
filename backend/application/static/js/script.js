@@ -1,105 +1,9 @@
 document.addEventListener("DOMContentLoaded", function() {
-  // Verifica qual página foi carregada com base na existência de elementos específicos
-  if (document.getElementById("loginContainer")) {
-    initLoginPage();
-  } else if (document.getElementById("chatContainer")) {
-    initChatPage();
-  }
-});
-
-/* ====================================================
-   LÓGICA DA PÁGINA DE LOGIN / CADASTRO (login.html)
-   ==================================================== */
-function initLoginPage() {
-  // ---------------------------
-  // Seleção dos elementos do DOM
-  // ---------------------------
-  const loginContainer   = document.getElementById("loginContainer");
-  const loginForm        = document.getElementById("loginForm");
-  const registerForm     = document.getElementById("registerForm");
-  const usernameInput    = document.getElementById("usernameInput");
-  const passwordInput    = document.getElementById("passwordInput");
-  const loginBtn         = document.getElementById("loginBtn");
-  const loginError       = document.getElementById("loginError");
-  const registerName     = document.getElementById("registerName");
-  const registerEmail    = document.getElementById("registerEmail");
-  const registerPassword = document.getElementById("registerPassword");
-  const createAccountBtn = document.getElementById("createAccountBtn");
-  const cancelRegisterBtn= document.getElementById("cancelRegisterBtn");
-
-  // ---------------------------
-  // Variáveis e inicializações
-  // ---------------------------
-  let registeredUsers = JSON.parse(localStorage.getItem("registeredUsers") || "{}");
-  // Se não houver usuários registrados, cria um usuário padrão
-  if (Object.keys(registeredUsers).length === 0) {
-    registeredUsers["usuario@exemplo.com"] = "Senha123";
-    localStorage.setItem("registeredUsers", JSON.stringify(registeredUsers));
-  }
-
-  // ---------------------------
-  // Funções utilitárias
-  // ---------------------------
-  function isValidEmail(email) {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  }
-  function isValidPassword(password) {
-    const passwordRegex = /^(?=.*[A-Z])(?=.*\d).{10,}$/;
-    return passwordRegex.test(password);
-  }
-
-  // ---------------------------
-  // Configuração dos event listeners
-  // ---------------------------
-  // Exibe o formulário de cadastro
-
-  // Cancela o cadastro e volta para o formulário de login
-  cancelRegisterBtn.addEventListener("click", () => {
-    registerForm.style.display = "none";
-    loginForm.style.display = "flex";
-    registerEmail.value = "";
-    registerPassword.value = "";
-    registerName.value = "";
-  });
-
-  // Cria a conta do usuário, após validações
-  createAccountBtn.addEventListener("click", () => {
-    const name     = registerName.value.trim();
-    const email    = registerEmail.value.trim();
-    const password = registerPassword.value.trim();
-    
-    registeredUsers[email] = password;
-    localStorage.setItem("registeredUsers", JSON.stringify(registeredUsers));
-    alert("Conta criada com sucesso!");
-    
-    // Após cadastro, preenche o campo de login e volta para o formulário de login
-    usernameInput.value = email;
-    registerForm.style.display = "none";
-    loginForm.style.display = "flex";
-    registerEmail.value = "";
-    registerPassword.value = "";
-    registerName.value = "";
-  });
-
-  // Efetua o login do usuário
-  /*
-  loginBtn.addEventListener("click", () => {
-    const username = usernameInput.value.trim();
-    const password = passwordInput.value.trim();
-    if (registeredUsers[username] && registeredUsers[username] === password) {
-      window.location.href = "chat.html";
-    } else {
-      loginError.textContent = "Usuário ou senha incorretos!";
-    }
-  });
-  */
-}
-
+  
 /* ====================================================
    LÓGICA DA PÁGINA DO CHAT (chat.html)
    ==================================================== */
-function initChatPage() {
+//function initChatPage() {
   // ---------------------------
   // Variáveis e armazenamento
   // ---------------------------
@@ -147,7 +51,24 @@ function initChatPage() {
   }
   // Renderiza a lista de conversas na barra lateral
   function renderConversationsSidebar() {
-    //historyList.innerHTML = "";
+    if(conversa_id != "None")
+    {
+      historyList.innerHTML = `
+      <li class="conversation-item" data-id="new-chat" onclick="window.location.href='/chat/new'">
+        <a class="conversation-title">Nova Conversa</a>
+        <img style="height: 20px; width: 20px; margin-right: 5px;" src="/static/img/pen-to-square.svg" alt="Inicie uma nova conversa">
+      </li>
+      `;
+    }
+    else
+    {
+      historyList.innerHTML = `
+      <li style="background-color: rgb(148, 63, 73);" class="conversation-item" data-id="new-chat" onclick="window.location.href='/chat/new'">
+        <a class="conversation-title">Nova Conversa</a>
+        <img style="height: 20px; width: 20px; margin-right: 5px;" src="/static/img/pen-to-square.svg" alt="Inicie uma nova conversa">
+      </li>
+      `;
+    }
     conversations.forEach(conv => {
       // Cria o item da conversa
       const li = document.createElement("li");
@@ -159,7 +80,6 @@ function initChatPage() {
       {
         li.setAttribute("style", "background-color:rgb(148, 63, 73)");
       }
-
       // Título da conversa (com limite de caracteres)
       const titleA = document.createElement("a");
       titleA.classList.add("conversation-title");
@@ -277,8 +197,9 @@ function initChatPage() {
     };
     
     deleteConfirmBtn.onclick = function() {
+      console.log(conversations)
       conversations = conversations.filter(c => c.pk !== conv.pk);
-      renderConversationsSidebar();
+      console.log(conversations)
       deleteModal.style.display = "none";
       const currentConversaId = window.location.pathname.split('/').pop(); //Obtém ID da URL
       // Enviar atualização para o back-end via Fetch API (AJAX)
@@ -297,47 +218,11 @@ function initChatPage() {
         if (currentConversaId == conv.pk) {
           window.location.href = "/chat/new";  // Redireciona para a página de novo chat
         }
+        renderConversationsSidebar();
       }
     })
     .catch(error => console.error("Erro na requisição:", error));
     };
-  }
-
-  // Modal customizado para opções de conversa
-  function showCustomModal(conv) {
-    modalTitle.textContent = "Opções da Conversa";
-    modalBody.innerHTML = `
-      <button id="renameBtn" class="modal-option">Renomear</button>
-      <button id="deleteBtn" class="modal-option">Apagar</button>
-    `;
-    customModal.style.display = "flex";
-    
-    document.getElementById("renameBtn").addEventListener("click", () => {
-      customModal.style.display = "none";
-      showRenameModal(conv);
-    });
-    document.getElementById("deleteBtn").addEventListener("click", () => {
-      customModal.style.display = "none";
-      showDeleteModalCustom(conv);
-    });
-  }
-
-  // Modal para renomear conversa
-  function showRenameModal(conv) {
-    modalTitle.textContent = "Renomear Conversa";
-    modalBody.innerHTML = `<input type="text" id="newNameInput" value="${conv.fields.nome}">`;
-    customModal.style.display = "flex";
-    currentAction = "rename";
-    currentConvId = conv.pk;
-  }
-
-  // Modal customizado para exclusão de conversa
-  function showDeleteModalCustom(conv) {
-    modalTitle.textContent = "Apagar Conversa";
-    modalBody.innerHTML = `<p>Deseja realmente apagar a conversa "${conv.fields.nome}"?</p>`;
-    customModal.style.display = "flex";
-    currentAction = "delete";
-    currentConvId = conv.pk;
   }
 
   // ---------------------------
@@ -589,4 +474,5 @@ function stopLoadingAnimation() {
   {
     renderMessages();
   }
-}
+  
+});
