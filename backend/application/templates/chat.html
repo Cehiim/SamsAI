@@ -33,21 +33,9 @@
     <div class="sidebar" id="sidebar">
       <h2>Conversas</h2>
       <ul id="historyList">
-        {% if conversa_id is not None %}
-          <li class="conversation-item" data-id="new-chat" onclick="window.location.href='{% url 'new_chat' %}'">
-            <a class="conversation-title">Nova Conversa</a>
-            <img style="height: 20px; width: 20px; margin-right: 5px;" src="{% static 'img/pen-to-square.svg' %}" alt="Inicie uma nova conversa">
-          </li>
-        {% else %}
-          <li style="background-color: rgb(148, 63, 73);" class="conversation-item" data-id="new-chat" onclick="window.location.href='{% url 'new_chat' %}'">
-            <a class="conversation-title">Nova Conversa</a>
-            <img style="height: 20px; width: 20px; margin-right: 5px;" src="{% static 'img/pen-to-square.svg' %}" alt="Inicie uma nova conversa">
-          </li>
-        {% endif %}
          <!-- Lista de conversas gerada dinamicamente -->
       </ul>
     </div>
-    
     <div class="chat-section" id="chatSection">
       <div class="chat-header">
         <h1>SamsAI</h1>
@@ -109,7 +97,9 @@
   <!-- Modal de Configurações -->
   <div id="configModal" class="modal">
     <div class="modal-content">
-      <span id="closeModal" class="close-button">&times;</span>
+      <span id="closeModal" class="close-button">
+        <img style="height: 40px; width: 40px;" src="{% static 'img/xmark.svg' %}" alt="Fechar Configurações">
+      </span>
       <h2>Configurações</h2>
       <form id="configForm">
         <div class="config-section">
@@ -140,6 +130,10 @@
             <option value="Times New Roman">Times New Roman</option>
             <option value="Courier New">Courier New</option>
           </select>
+        </div>
+        <div class="prompt-input-section">
+          <legend id="PromptInputLegend">Como o SamsAI deveria te responder?</legend>
+          <textarea id="prompt-input" name="prompt-usuario" type="text" autocomplete="off"></textarea>
         </div>
         <button type="submit" class="config-save-btn">Salvar</button>
       </form>

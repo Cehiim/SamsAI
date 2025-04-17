@@ -1,5 +1,10 @@
 from django.contrib import admin
-from .models import Mensagem, Conversa, Documento
+from .models import Usuario, Mensagem, Conversa, Documento
+from django.contrib.auth.admin import UserAdmin
+
+@admin.register(Usuario)
+class UsuarioAdmin(UserAdmin):
+    list_display = ('pk', 'username', 'is_superuser')
 
 @admin.register(Conversa)
 class ConversaAdmin(admin.ModelAdmin):

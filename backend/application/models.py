@@ -1,9 +1,15 @@
 from django.db import models
-from django.contrib.auth.models import User
+from django.contrib.auth.models import AbstractUser
 from django.core.validators import MinLengthValidator
 
+class Usuario(AbstractUser):
+    prompt_instrucao = models.TextField("Prompt de Instrução")
+
+    def __str__(self):
+        return self.username
+
 class Conversa(models.Model):
-    usuario = models.ForeignKey(User, on_delete=models.CASCADE, related_name="conversas")
+    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name="conversas")
     nome = models.CharField("Nome", max_length=30, validators=[MinLengthValidator(1)])
     data = models.DateTimeField("Data e horário de criação da mensagem", auto_now_add=True)
 
