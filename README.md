@@ -15,7 +15,7 @@ git checkout Dallape
 python3 -m venv venv
 ```
 
-### No MacOS
+### No Linux ou MacOS
 ```
 source venv/bin/activate
 ```
