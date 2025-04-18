@@ -92,7 +92,7 @@ class ChatBotView(LoginRequiredMixin, View):
         except Conversa.DoesNotExist:
             raise Http404("Conversa não encontrada")
         
-        usuario = request.user
+        usuario = Usuario.objects.get(pk=request.user.pk)
 
         queryset_conversas = Conversa.objects.filter(usuario=usuario).order_by('-data')
         todas_as_conversas = serializers.serialize('json', queryset_conversas)
@@ -107,7 +107,8 @@ class ChatBotView(LoginRequiredMixin, View):
             "mensagens": mensagens,
             "conversa_atual": conversa_atual,
             "conversa_id": conversa_id,
-            "todas_as_conversas": todas_as_conversas
+            "todas_as_conversas": todas_as_conversas,
+            "prompt_instrucao": usuario.prompt_instrucao
         }
         return render(request, 'chat.html', context)
     
@@ -154,7 +155,7 @@ class ChatBotView(LoginRequiredMixin, View):
 
 class NewChatBotView(LoginRequiredMixin, View):
     def get(self, request):
-        usuario = request.user
+        usuario = Usuario.objects.get(pk=request.user.pk)
         
         queryset_conversas = Conversa.objects.filter(usuario=usuario).order_by('-data')
         todas_as_conversas = serializers.serialize('json', queryset_conversas)
@@ -164,11 +165,12 @@ class NewChatBotView(LoginRequiredMixin, View):
             "usuario": usuario,
             "todas_as_conversas": todas_as_conversas,
             "conversa_id": None,
+            "prompt_instrucao": usuario.prompt_instrucao
         }
         return render(request, "chat.html", context)
     
     def post(self, request):
-        usuario = request.user
+        usuario = Usuario.objects.get(pk=request.user.pk)
         data = json.loads(request.body)
         conteudo_mensagem_usuario = data.get("message") #extrai conteúdo da mensagem
 
@@ -191,6 +193,7 @@ class NewChatBotView(LoginRequiredMixin, View):
             response = client.chat.completions.create(
               model="sabia-3",
               messages=[
+                {"role": "system", "content": usuario.prompt_instrucao},
                 {"role": "user", "content": conteudo_mensagem_usuario},
               ],
               max_tokens=8000
@@ -272,7 +275,16 @@ class UploadView(LoginRequiredMixin, View):
 
 class ChangePromptView(LoginRequiredMixin, View):
     def post(self, request):
-        pass
+        try:
+            usuario = Usuario.objects.get(pk=request.user.pk)
+            data = json.loads(request.body)
+            usuario.prompt_instrucao = data.get("message") #extrai conteúdo da mensagem
+            usuario.save()
+
+            return JsonResponse({'success': True, 'message': 'Alteração do prompt feita com sucesso!'})
+        
+        except:
+            return JsonResponse({"success": False, "error": "Erro na alteração do prompt"}, status=500)
 
 
             

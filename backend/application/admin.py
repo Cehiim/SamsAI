@@ -4,7 +4,7 @@ from django.contrib.auth.admin import UserAdmin
 
 @admin.register(Usuario)
 class UsuarioAdmin(UserAdmin):
-    list_display = ('pk', 'username', 'is_superuser')
+    list_display = ('pk', 'username', 'is_superuser', 'prompt_instrucao')
 
 @admin.register(Conversa)
 class ConversaAdmin(admin.ModelAdmin):

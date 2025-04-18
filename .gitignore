@@ -9,3 +9,9 @@ db.sqlite3
 media
 
 .DS_Store
+
+Dockerfile
+
+docker-compose.yml
+
+nginx
