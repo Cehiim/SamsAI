@@ -3,7 +3,7 @@ document.addEventListener("DOMContentLoaded", function() {
 /* ====================================================
    LÓGICA DA PÁGINA DO CHAT (chat.html)
    ==================================================== */
-//function initChatPage() {
+
   // ---------------------------
   // Variáveis e armazenamento
   // ---------------------------
@@ -18,6 +18,7 @@ document.addEventListener("DOMContentLoaded", function() {
   const sidebar       = document.getElementById("sidebar");
   const historyList   = document.getElementById("historyList");
   const chatWindow    = document.getElementById("chatWindow");
+  const warning       = document.getElementById("warning");
   const messageInput  = document.getElementById("messageInput");
   const sendBtn       = document.getElementById("sendBtn");
   const fileBtn       = document.getElementById("fileBtn");
@@ -42,6 +43,7 @@ document.addEventListener("DOMContentLoaded", function() {
   // Variáveis auxiliares para ações modais
   let currentAction = null;
   let currentConvId = null;
+  const MAX_CHARACTERS = 7500;
 
   // ---------------------------
   // Funções auxiliares
@@ -82,9 +84,9 @@ document.addEventListener("DOMContentLoaded", function() {
         li.setAttribute("style", "background-color:rgb(148, 63, 73)");
       }
       // Título da conversa (com limite de caracteres)
-      const titleA = document.createElement("a");
-      titleA.classList.add("conversation-title");
-      titleA.textContent = conv.fields.nome;
+      const titleP = document.createElement("p");
+      titleP.classList.add("conversation-title");
+      titleP.textContent = conv.fields.nome;
       
       // Ícone de opções (representado por "...")
       const optionsIcon = document.createElement("span");
@@ -121,7 +123,7 @@ document.addEventListener("DOMContentLoaded", function() {
           input.type = "text";
           input.value = conv.fields.nome;
           input.classList.add("conversation-title-edit");
-          li.replaceChild(input, titleA);
+          li.replaceChild(input, titleP);
           input.focus();
           
           const finishEdit = () => {
@@ -143,13 +145,15 @@ document.addEventListener("DOMContentLoaded", function() {
                   console.log("Nome atualizado com sucesso!");
                 } else {
                   console.error("Erro ao atualizar nome:", data.error);
+                  ShowErrorMessage("Houve algum erro na conexão. Não foi possível trocar o nome da conversa");
                 }
               })
               .catch(error => console.error("Erro na requisição:", error));
+              ShowErrorMessage("Houve algum erro na conexão. Não foi possível trocar o nome da conversa");
             }
           
-            titleA.textContent = conv.fields.nome;
-            li.replaceChild(titleA, input);
+            titleP.textContent = conv.fields.nome;
+            li.replaceChild(titleP, input);
           };
           input.addEventListener("blur", finishEdit);
           input.addEventListener("keydown", (keyEv) => {
@@ -175,7 +179,7 @@ document.addEventListener("DOMContentLoaded", function() {
         document.querySelectorAll(".inline-popup").forEach(el => el.remove());
       });
       
-      li.appendChild(titleA);
+      li.appendChild(titleP);
       li.appendChild(optionsIcon);
       historyList.appendChild(li);
     });
@@ -281,9 +285,11 @@ document.addEventListener("DOMContentLoaded", function() {
         console.log(data.message);
       } else {
         console.error("Erro ao atualizar prompt :", data.error);
+        ShowErrorMessage("Houve algum erro na conexão. Não foi possível deletar a mensagem");
       }
     })
     .catch(error => console.error("Erro na requisição:", error));
+    ShowErrorMessage("Houve algum erro na conexão. Não foi possível deletar a mensagem");
 
   });
 
@@ -336,7 +342,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
       let dot = null;
       for (let i = 0; i < 3; i++) {
-        dot = document.createElement("div");
+        dot = document.createElement("span");
         dot.classList.add("dots");
         waitMessageDiv.appendChild(dot);
       }
@@ -352,7 +358,12 @@ document.addEventListener("DOMContentLoaded", function() {
   console.log(dots);
   animationInterval = setInterval(() => {
     dots.forEach((dot, i) => {
-      dot.style.marginBottom = (i === index) ? "8px" : "0px";
+      if(i === index)
+      {
+        dot.style.animation = "bounce .6s cubic-bezier(0.6, 0.1, 1, 1.4) infinite";
+        dot.style.animationDirection = "alternate";
+      }
+      
     });
     index = (index + 1) % dots.length;
   }, 300);
@@ -367,31 +378,70 @@ function stopLoadingAnimation() {
   dots.forEach(dot => dot.style.marginBottom = "0px");
 }
 
+function ShowWarningMessage(waringMessage)
+{
+  warning.innerHTML = "";
+  const warningIcon = document.createElement("img");
+  warningIcon.src = "/static/img/triangle-exclamation.svg"
+  warningIcon.style.height = "20px"
+  warningIcon.style.width = "20px"
+  warning.appendChild(warningIcon)
+
+  warning.style.backgroundColor = "#d5a300";
+  warning.style.position = "absolute";
+  warning.style.padding = "10px";
+  warning.style.top = "10vh"
+  warning.style.left = "25%"
+  warning.style.borderRadius = "10px"
+  warning.style.display = "flex"
+  warning.style.gap = "1vw"
+
+  console.warn(waringMessage);
+  const warningText = document.createTextNode(waringMessage);
+  warning.appendChild(warningText);
+}
+
+function ShowErrorMessage(errorMessage)
+{
+  ShowWarningMessage(errorMessage);
+  warning.style.backgroundColor = "#fa1e1e";
+}
+
   // ---------------------------
   // Configuração dos eventos de envio de mensagem
   // ---------------------------
   sendBtn.addEventListener("click", () => {
     const messageText = messageInput.value.trim();
     if (messageText == "")
+      { return; }
+    else if (messageText.length > MAX_CHARACTERS)
+    {
+      const waringMessage = `Sua mensagem excedeu o limite de ${MAX_CHARACTERS} caracteres. Escreva uma mensagem mais curta!`;
+      ShowWarningMessage(waringMessage);
+      messageInput.value = "";
       return;
+    }
     else
-        messageInput.value = "";
+        { messageInput.value = ""; }
 
     // Enviar atualização para o back-end via Fetch API (AJAX)
     let conv_id;
     if (conversa_id == "None")
-      {
+    {
         conv_id = "new";
-      }
+        chatWindow.innerHTML = "";
+    }
     else
-      {
+    {
         conv_id = conversa_id;
-        mensagens.push({fields:{texto: messageText, eh_do_usuario: true}});
-        // Adiciona mensagem do usuário e salva
-        renderMessages(); // Exibe nova mensagem do usuário
-        startLoadingAnimation(); //Exibe animação de espera
-      }
+    }
+      mensagens.push({fields:{texto: messageText, eh_do_usuario: true}});
 
+      // Adiciona mensagem do usuário e salva
+      renderMessages(); // Exibe nova mensagem do usuário
+      startLoadingAnimation(); //Exibe animação de espera
+
+      // Enviar atualização para o back-end via Fetch API (AJAX)
       async function enviarMensagem(messageText, conv_id) {
         try {
           const response = await fetch(`/chat/${conv_id}`, {
@@ -422,9 +472,11 @@ function stopLoadingAnimation() {
 
           } else {
             console.error("Erro ao salvar mensagem:", data.error);
+            ShowErrorMessage("Houve algum erro na conexão. Não foi possível enviar a mensagem");
           }
         } catch (error) {
           console.error("Erro na requisição:", error);
+          ShowErrorMessage("Houve algum erro na conexão. Não foi possível enviar a mensagem");
         }
         
       }
@@ -470,10 +522,12 @@ function stopLoadingAnimation() {
           if (data.success) {
             console.log(data.message);
           } else {
-            console.error("Erro ao salvar mensagem:", data.error);
+            console.error("Erro ao salvar arquivo:", data.error);
+            ShowErrorMessage("Houve algum erro na conexão. Não foi possível realizar o upload do PDF");
           }
         })
         .catch(error => console.error("Erro na requisição:", error));
+        ShowErrorMessage("Houve algum erro na conexão. Não foi possível realizar o upload do PDF");
 
       renderMessages();
       fileInput.value = "";
