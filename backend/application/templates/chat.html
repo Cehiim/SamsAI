@@ -20,12 +20,15 @@
   <script>
     const conversa_id = "{{ conversa_id }}";
     const todas_as_conversas = JSON.parse({{ todas_as_conversas|safe }});
-  </script>
+
   {% if conversa_id is not None %}
-    <script>
       let mensagens = JSON.parse({{ mensagens|safe }});
-    </script>
+    
+  {% else %}
+      let mensagens = JSON.parse('[]');
+
   {% endif %}
+  </script>
 
 </head>
 <body>
@@ -37,8 +40,11 @@
       </ul>
     </div>
     <div class="chat-section" id="chatSection">
-      <div class="chat-header">
+      <div class="chat-header" id="chatHeader">
         <h1>SamsAI</h1>
+        <div id="warning">
+          <!--Mensagens renderizadas pelo Javascript-->
+        </div>
         <div id="profileIcon" class="profile-container">
           <span class="profile-icon"><img style="width: 40px; height: 40px;" src="{% static 'img/user.svg' %}" alt="Perfil"></span>
           <div id="profileDropdown" class="profile-dropdown"> 
@@ -57,7 +63,7 @@
           <!--Mensagens renderizadas pelo Javascript-->
         {% endif %}
       </div>
-      <div class="chat-input">
+      <div id="chat-input">
         <button id="fileBtn" class="btn-file"><img style="width: 25px; height: 30px;" src="{% static 'img/paperclip.svg' %}" alt="Envie um PDF"></button>
         <input name="arquivo" type="file" id="fileInput" style="display:none;">
         <input name="mensagem_usuario" type="text" autocomplete="off" id="messageInput" contenteditable="true" placeholder="Digite sua mensagem...">
