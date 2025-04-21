@@ -304,15 +304,14 @@ button:hover.profile-btn, a:hover.profile-btn {
   flex-direction: column;
 }
 
-.chat-input {
+#chat-input {
   display: flex;
   align-items: center;
   padding: 5px;
   background-color: #212121;
-  height: 55px;
 }
 
-.chat-input input[type="text"] {
+#chat-input input[type="text"] {
   flex: 1;
   height: 100%;
   padding: 5px 8px;
@@ -324,7 +323,7 @@ button:hover.profile-btn, a:hover.profile-btn {
   font-size: 1.1em;
 }
 
-.chat-input input[type="text"]:focus {
+#chat-input input[type="text"]:focus {
   outline: 0 solid #444;
   height: 100%;
 }
@@ -384,21 +383,44 @@ button:hover.profile-btn, a:hover.profile-btn {
   margin-left: 20px;
 }
 
+/* ----------------------------------------------------
+   ANIMAÇÃO DE ESPERA DA MENSAGEM DA IA
+---------------------------------------------------- */
+
 #wait-message
 {
-  padding: 20px;
+  padding: 18px;
   width: 7vw;
   background-color: #722F37;
   display: flex;
-  gap: 10px;
   justify-content: center;
   border-radius: 4px;
 }
 
 #wait-message > .dots{
-  padding: 5px;
+  display: inline-block;
+  padding: 7px;
+  margin: 5px;
   border-radius: 50%;
   background-color: #FFF;
+}
+
+.dots:nth-child(1){
+  animation-delay: .1s;
+}
+
+.dots:nth-child(2){
+  animation-delay: .2s;
+}
+
+.dots:nth-child(3){
+  animation-delay: .3s;
+}
+
+@keyframes bounce{
+  to{
+    transform: translateY(10px);
+  }
 }
 
 /* ----------------------------------------------------
@@ -418,7 +440,7 @@ button:hover.profile-btn, a:hover.profile-btn {
 }
 
 .modal .modal-content {
-  background-color: #333;
+  background-color: #722F37;
   padding: 20px;
   border: 1px solid #888;
   width: 80%;
@@ -427,20 +449,66 @@ button:hover.profile-btn, a:hover.profile-btn {
   color: #fff;
 }
 
+.modal-content > h2, 
+.modal-content > p{
+  margin-bottom: 20px;
+}
+
 /* Modal de exclusão: ajusta os botões para seguir o design do site */
 .modal-actions button {
   padding: 10px;
   border: none;
   border-radius: 4px;
-  background-color: #444;
-  color: #fff;
+  color: #000;
   cursor: pointer;
   font-size: 1rem;
   margin: 5px;
+  background-color: #FFF;
 }
+
 .modal-actions button:hover {
-  background-color: #555;
+  background-color: #D0D0D0;
 }
+
+#deleteConfirmBtn{
+  background-color: #ff1717;
+}
+
+#deleteConfirmBtn:hover{
+  background-color: #d71313;
+}
+
+.prompt-input-section{
+  justify-content: center;
+  align-items: center;
+
+}
+
+#PromptInputLegend{
+  font-size: 20px;
+  margin-bottom: 20px;
+}
+
+#prompt-input{
+  padding: 10px;
+  margin-bottom: 20px;
+  font-size: 15px;
+  width: 100%;
+  height: 160px;
+  background-color: #8E555C;
+  color: #FFF;
+  border-radius: 8px;
+  border: 1px solid #000;
+  font-family: Inter, Arial, sans-serif;
+  font-weight: 400;
+  resize: none;
+  overflow: auto;
+
+}
+#prompt-input:focus{
+  outline: 0 solid #722F37;
+}
+
 
 .close-button {
   color: #aaa;
@@ -466,9 +534,9 @@ button:hover.profile-btn, a:hover.profile-btn {
 }
 
 .config-save-btn {
-  background-color: #444;
+  background-color: #FFF;
   border: none;
-  color: #fff;
+  color: #000;
   padding: 10px;
   border-radius: 4px;
   cursor: pointer;
@@ -476,7 +544,7 @@ button:hover.profile-btn, a:hover.profile-btn {
 }
 
 .config-save-btn:hover {
-  background-color: #555;
+  background-color: #D0D0D0;
 }
 
 /* ----------------------------------------------------
@@ -495,7 +563,7 @@ body.light-theme .chat-header {
   background-color: #bbb;
 }
 
-body.light-theme .chat-input,
+body.light-theme #chat-input,
 body.light-theme .profile-dropdown,
 body.light-theme .modal-content {
   background-color: #ccc;
@@ -628,7 +696,7 @@ body.light-theme .login-container {
   background: rgb(148, 63, 73);
   border-radius: 4px;
   padding: 5px;
-  z-index: 10;
+  z-index: 9999;
 }
 
 .inline-popup button {
