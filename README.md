@@ -86,12 +86,18 @@ python manage.py runserver
 ```
 
 # Configurando o Docker no ambiente de produção
-## 1) Prepare as imagens com docker compose
+## 0) Se você está apenas atualizando o código na instância, rode
+```
+docker-compose down --volumes --remove-orphans
+docker-compose up -d
+```
+
+## 1) Se você estiver criando as imagens do zero, prepare-as com docker compose
 ```
 docker-compose build --no-cache
 ```
 
-## 2) Rode o container em segundo plano
+## 2) Rode os containers em segundo plano
 ```
 docker-compose up -d
 ```

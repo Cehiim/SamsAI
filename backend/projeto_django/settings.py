@@ -60,6 +60,10 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 MEDIA_URL = 'media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
+CSRF_COOKIE_HTTPONLY = False # precisa estar como False pra JS conseguir acessar
+#CSRF_COOKIE_SECURE = True # se estiver usando HTTPS
+#CSRF_TRUSTED_ORIGINS = ['https://seu-front.vercel.app']  # ou o domínio que for
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',

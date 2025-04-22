@@ -4,18 +4,53 @@ document.addEventListener("DOMContentLoaded", function() {
    LÓGICA DA PÁGINA DO CHAT (chat.html)
    ==================================================== */
 
-  // ---------------------------
-  // Variáveis e armazenamento
-  // ---------------------------
-  let conversations       = todas_as_conversas;
-  let conversationCounter = conversations.length;
+  // --------------------------------------------------------
+  // Variáveis para armazenamento de conversas e mensagens
+  // --------------------------------------------------------
+
+  const URL = window.location.href;
+  let conversa_id = URL.split('/')[URL.split('/').length - 1]; //ID da conversa atual
+
+  let conversations = null; // Lista de conversas
+  var currentConversation = false; // Conversa atual
+
+  async function loadConversations() {
+    try{
+    const response = await fetch('/api/conversas');
+    const data = await response.json();
+    conversations = JSON.parse(data);
+
+    // Renderiza a lista de conversas ao carregar a página
+    renderConversationsSidebar();
+
+    if(conversa_id != "new")
+      currentConversation = conversations.find(conv => String(conv.pk) === String(conversa_id));
+    }
+    catch(error) {
+      console.error("Erro ao buscar conversas:", error);
+    }
+  }
+  loadConversations();
+  
+
+  let mensagens = JSON.parse('[]'); //Lista de mensagens da conversa
+  if(conversa_id != "new") //Se a conversa não for nova, obtém as mensagens
+  {
+    async function loadMessages() {
+      const response = await fetch(`/api/mensagens/${conversa_id}`);
+      const data = await response.json();
+      mensagens = JSON.parse(data);
+
+      // Renderiza as mensagens ao carregar a página
+      renderMessages();
+    }
+    loadMessages();
+  }
   
   
   // ---------------------------
   // Seleção dos elementos do DOM
   // ---------------------------
-  const toggleArrow   = document.getElementById("toggleArrow");
-  const sidebar       = document.getElementById("sidebar");
   const historyList   = document.getElementById("historyList");
   const chatWindow    = document.getElementById("chatWindow");
   const warning       = document.getElementById("warning");
@@ -25,36 +60,33 @@ document.addEventListener("DOMContentLoaded", function() {
   const fileInput     = document.getElementById("fileInput");
   const audioBtn      = document.getElementById("audioBtn");
 
-  const customModal   = document.getElementById("customModal");
-  const modalTitle    = document.getElementById("modalTitle");
-  const modalBody     = document.getElementById("modalBody");
-  const modalCancelBtn= document.getElementById("modalCancelBtn");
-  const modalConfirmBtn= document.getElementById("modalConfirmBtn");
-
   const profileIcon   = document.getElementById("profileIcon");
   const profileDropdown = document.getElementById("profileDropdown");
-  const logoutBtn     = document.getElementById("logoutBtn");
   const configBtn     = document.getElementById("configBtn");
   const configModal   = document.getElementById("configModal");
   const closeModal    = document.getElementById("closeModal");
   const configForm    = document.getElementById("configForm");
   const PromptInput   = document.getElementById("prompt-input");
 
-  // Variáveis auxiliares para ações modais
-  let currentAction = null;
-  let currentConvId = null;
-  const MAX_CHARACTERS = 7500;
+  // Constante que define número máximo de caracteres na mensagem
+  const MAX_CHARACTERS = 7500; 
 
   // ---------------------------
   // Funções auxiliares
   // ---------------------------
 
-  function getCSRFToken() {
-    return document.querySelector('meta[name="csrf-token"]')?.getAttribute("content");
+  // Obtém CSRF_TOKEN
+  function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
   }
+
+  const CSRF_TOKEN = getCookie('csrftoken')
+
   // Renderiza a lista de conversas na barra lateral
   function renderConversationsSidebar() {
-    if(conversa_id != "None")
+    if(conversa_id != "new")
     {
       historyList.innerHTML = `
       <li class="conversation-item" data-id="new-chat" onclick="window.location.href='/chat/new'">
@@ -135,7 +167,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 method: "POST",
                 headers: {
                   "Content-Type": "application/json",
-                  "X-CSRFToken": getCSRFToken(), // Capturar o CSRF Token do Django
+                  "X-CSRFToken": CSRF_TOKEN, // Capturar o CSRF Token do Django
                 },
                 body: JSON.stringify({ nome: conv.fields.nome }),
               })
@@ -202,9 +234,7 @@ document.addEventListener("DOMContentLoaded", function() {
     };
     
     deleteConfirmBtn.onclick = function() {
-      console.log(conversations)
       conversations = conversations.filter(c => c.pk !== conv.pk);
-      console.log(conversations)
       deleteModal.style.display = "none";
       const currentConversaId = window.location.pathname.split('/').pop(); //Obtém ID da URL
       // Enviar atualização para o back-end via Fetch API (AJAX)
@@ -212,7 +242,7 @@ document.addEventListener("DOMContentLoaded", function() {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-CSRFToken": getCSRFToken(), // Capturar o CSRF Token do Django
+        "X-CSRFToken": CSRF_TOKEN, // Capturar o CSRF Token do Django
       },
       body: JSON.stringify({ key: currentConversaId }),
     })
@@ -293,17 +323,10 @@ document.addEventListener("DOMContentLoaded", function() {
 
   });
 
-  // Renderiza a lista de conversas ao carregar a página
-  renderConversationsSidebar();
-
   // ---------------------------
   // Obtenção dos parâmetros da URL e seleção da conversa atual
   // ---------------------------
-  var currentConversation = false;
-  if(conversa_id != "None")
-  {
-    currentConversation = conversations.find(conv => String(conv.pk) === String(conversa_id));
-  }
+  
   
   // ---------------------------
   // Seleção dos elementos do DOM
@@ -355,7 +378,6 @@ document.addEventListener("DOMContentLoaded", function() {
   function startLoadingAnimation() {
   const dots = document.querySelectorAll("#wait-message .dots");
   let index = 0;
-  console.log(dots);
   animationInterval = setInterval(() => {
     dots.forEach((dot, i) => {
       if(i === index)
@@ -426,7 +448,7 @@ function ShowErrorMessage(errorMessage)
 
     // Enviar atualização para o back-end via Fetch API (AJAX)
     let conv_id;
-    if (conversa_id == "None")
+    if (conversa_id == "new")
     {
         conv_id = "new";
         chatWindow.innerHTML = "";
@@ -448,7 +470,7 @@ function ShowErrorMessage(errorMessage)
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              "X-CSRFToken": getCSRFToken(),
+              "X-CSRFToken": CSRF_TOKEN,
             },
             body: JSON.stringify({ message: messageText }),
           });
@@ -460,14 +482,18 @@ function ShowErrorMessage(errorMessage)
       
             // IA respondeu — você pode adicionar a mensagem
 
-            if (conversa_id === "None") {
-              window.location.href = data.redirect;
+            if (conversa_id === "new") {
+              window.history.pushState({}, '', data.redirect);
+              //window.location.href = data.redirect;
+              // TODO: Pensar num mecanismo para obter somente a última conversa e última mensagem
+              
+              conversations.unshift({fields: {nome: data.nome_da_nova_conversa}, pk: data.nova_conversa_id});
+              conversa_id = data.nova_conversa_id;
+
+              renderConversationsSidebar();
             }
-            else{
-              mensagens.push({fields: { texto: data.message, eh_do_usuario: false }});
-              stopLoadingAnimation(); //Encerra animação
-            }
-      
+            mensagens.push({fields: { texto: data.message, eh_do_usuario: false }});
+            stopLoadingAnimation(); //Encerra animação
             renderMessages(); // Mostra resposta da IA
 
           } else {
@@ -543,11 +569,4 @@ function ShowErrorMessage(errorMessage)
       renderMessages();
     }, 500);
   });
-  
-  // Renderiza as mensagens ao carregar a página
-  if(conversa_id != "None")
-  {
-    renderMessages();
-  }
-  
 });

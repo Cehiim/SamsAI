@@ -9,9 +9,15 @@ from django.contrib.auth.hashers import check_password
 from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.core import serializers
+from django.views.decorators.csrf import ensure_csrf_cookie
 import json
 import openai
 from decouple import config
+
+@ensure_csrf_cookie
+def csrf_token_view(request):
+    return JsonResponse({'detail': 'CSRF cookie set'})
+
 
 class LoginView(View):
     def get(self, request):
@@ -94,20 +100,9 @@ class ChatBotView(LoginRequiredMixin, View):
         
         usuario = Usuario.objects.get(pk=request.user.pk)
 
-        queryset_conversas = Conversa.objects.filter(usuario=usuario).order_by('-data')
-        todas_as_conversas = serializers.serialize('json', queryset_conversas)
-        todas_as_conversas = json.dumps(todas_as_conversas)
-
-        queryset_mensagens = conversa_atual.mensagens.all()
-        mensagens = serializers.serialize('json', queryset_mensagens)
-        mensagens = json.dumps(mensagens) 
-
         context = {
             "usuario": usuario,
-            "mensagens": mensagens,
             "conversa_atual": conversa_atual,
-            "conversa_id": conversa_id,
-            "todas_as_conversas": todas_as_conversas,
             "prompt_instrucao": usuario.prompt_instrucao
         }
         return render(request, 'chat.html', context)
@@ -116,6 +111,8 @@ class ChatBotView(LoginRequiredMixin, View):
         try:
             data = json.loads(request.body)
             conversa_atual = Conversa.objects.get(pk=conversa_id)
+            usuario = Usuario.objects.get(pk=request.user.pk)
+
             if conversa_atual.usuario != request.user:
                 return JsonResponse({"success": False, "error": "Conversa não encontrada"}, status=404)
 
@@ -132,6 +129,7 @@ class ChatBotView(LoginRequiredMixin, View):
             response = client.chat.completions.create(
               model="sabia-3",
               messages=[
+                {"role": "system", "content": usuario.prompt_instrucao},
                 {"role": "user", "content": conteudo_mensagem_usuario},
               ],
               max_tokens=8000
@@ -156,15 +154,9 @@ class ChatBotView(LoginRequiredMixin, View):
 class NewChatBotView(LoginRequiredMixin, View):
     def get(self, request):
         usuario = Usuario.objects.get(pk=request.user.pk)
-        
-        queryset_conversas = Conversa.objects.filter(usuario=usuario).order_by('-data')
-        todas_as_conversas = serializers.serialize('json', queryset_conversas)
-        todas_as_conversas = json.dumps(todas_as_conversas)
 
         context = {
             "usuario": usuario,
-            "todas_as_conversas": todas_as_conversas,
-            "conversa_id": None,
             "prompt_instrucao": usuario.prompt_instrucao
         }
         return render(request, "chat.html", context)
@@ -204,11 +196,32 @@ class NewChatBotView(LoginRequiredMixin, View):
             nova_mensagem_IA.save()
 
             redirect_url = reverse('chat', args=[nova_conversa.pk])
-            return JsonResponse({'success': True, "message": mensagem_IA, 'Nova conversa': f"{nome_conversa} criada com sucesso!", 'redirect': redirect_url})
+            return JsonResponse({'success': True, "message": mensagem_IA, 'nome_da_nova_conversa': nome_conversa, 'nova_conversa_id': nova_conversa.pk, 'redirect': redirect_url})
         
         else:
             return JsonResponse({"success": False, "error": "Mensagem inválida"})
 
+class GetConversasView(LoginRequiredMixin, View):
+    def get(self, request):
+        try:
+            usuario = Usuario.objects.get(pk=request.user.pk)
+            queryset_conversas = Conversa.objects.filter(usuario=usuario).order_by('-data')
+            todas_as_conversas = serializers.serialize('json', queryset_conversas)
+            return JsonResponse(todas_as_conversas, safe=False)
+        
+        except:
+            return JsonResponse({"success": False, "error": 'Erro na obtenção das conversas'})
+
+class GetMensagensView(LoginRequiredMixin, View):
+    def get(self, request, conversa_id):
+        try:
+            conversa_atual = Conversa.objects.get(pk=conversa_id)
+            queryset_mensagens = conversa_atual.mensagens.all()
+            mensagens = serializers.serialize('json', queryset_mensagens)
+            return JsonResponse(mensagens, safe=False)
+        
+        except:
+            return JsonResponse({"success": False, "error": f'Erro na obtenção das mensagens da conversa de código: {conversa_id}'})
             
 class RenameView(LoginRequiredMixin, View):
     def post(self, request, conversa_id):

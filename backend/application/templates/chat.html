@@ -3,7 +3,6 @@
 <head>
   {% load static %}
   <meta charset="UTF-8" />
-  <meta name="csrf-token" content="{{ csrf_token }}">
 
   {% if conversa_id is None %}
     <title>SAMSAI - Chat</title>
@@ -15,20 +14,6 @@
   <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script src="{% static 'js/script.js' %}"></script>
-
-  <!--O VSCode pode reclamar de erro nas linhas abaixo, mas não há nada errado ;)-->
-  <script>
-    const conversa_id = "{{ conversa_id }}";
-    const todas_as_conversas = JSON.parse({{ todas_as_conversas|safe }});
-
-  {% if conversa_id is not None %}
-      let mensagens = JSON.parse({{ mensagens|safe }});
-    
-  {% else %}
-      let mensagens = JSON.parse('[]');
-
-  {% endif %}
-  </script>
 
 </head>
 <body>
