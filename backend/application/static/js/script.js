@@ -8,12 +8,16 @@ document.addEventListener("DOMContentLoaded", function() {
   // Variáveis para armazenamento de conversas e mensagens
   // --------------------------------------------------------
 
-  const URL = window.location.href;
-  let conversa_id = URL.split('/')[URL.split('/').length - 1]; //ID da conversa atual
+  function GetConversaID() {
+    const URL = window.location.href;
+    let conversa_id = URL.split('/').pop(); //ID da conversa atual
+    return conversa_id;
+  }
 
   let conversations = null; // Lista de conversas
   var currentConversation = false; // Conversa atual
 
+  // Obtém a lista de conversas da sidebar
   async function loadConversations() {
     try{
     const response = await fetch('/api/conversas');
@@ -23,8 +27,8 @@ document.addEventListener("DOMContentLoaded", function() {
     // Renderiza a lista de conversas ao carregar a página
     renderConversationsSidebar();
 
-    if(conversa_id != "new")
-      currentConversation = conversations.find(conv => String(conv.pk) === String(conversa_id));
+    if(GetConversaID() != "new") //Atualiza currentConversation com o valor da conversa atual
+      currentConversation = conversations.find(conv => String(conv.pk) === String(GetConversaID()));
     }
     catch(error) {
       console.error("Erro ao buscar conversas:", error);
@@ -34,10 +38,10 @@ document.addEventListener("DOMContentLoaded", function() {
   
 
   let mensagens = JSON.parse('[]'); //Lista de mensagens da conversa
-  if(conversa_id != "new") //Se a conversa não for nova, obtém as mensagens
+  if(GetConversaID() != "new") //Se a conversa não for nova, obtém as mensagens
   {
     async function loadMessages() {
-      const response = await fetch(`/api/mensagens/${conversa_id}`);
+      const response = await fetch(`/api/mensagens/${GetConversaID()}`);
       const data = await response.json();
       mensagens = JSON.parse(data);
 
@@ -86,7 +90,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
   // Renderiza a lista de conversas na barra lateral
   function renderConversationsSidebar() {
-    if(conversa_id != "new")
+    if(GetConversaID() != "new")  //Se a conversa não for nova, exibe item de nova conversa sem background color de destaque
     {
       historyList.innerHTML = `
       <li class="conversation-item" data-id="new-chat" onclick="window.location.href='/chat/new'">
@@ -95,7 +99,7 @@ document.addEventListener("DOMContentLoaded", function() {
       </li>
       `;
     }
-    else
+    else //Se a conversa for nova, exibe item de nova conversa com background color de destaque
     {
       historyList.innerHTML = `
       <li style="background-color: rgb(148, 63, 73);" class="conversation-item" data-id="new-chat" onclick="window.location.href='/chat/new'">
@@ -104,14 +108,14 @@ document.addEventListener("DOMContentLoaded", function() {
       </li>
       `;
     }
-    conversations.forEach(conv => {
+    conversations.forEach(conv => { //Renderiza as conversas
       // Cria o item da conversa
       const li = document.createElement("li");
       li.classList.add("conversation-item");
       li.setAttribute("data-id", conv.pk);
-      li.setAttribute("onclick", `window.location.href='/chat/${conv.pk}'`);
+      li.setAttribute("onclick", `window.location.href='/chat/${conv.pk}'`); //Cria link que redireciona o usuário para a conversa ao clicá-la na sidebar
 
-      if (conversa_id == conv.pk)
+      if (GetConversaID() == conv.pk) //Coloca a conversa atual com um background color de destaque
       {
         li.setAttribute("style", "background-color:rgb(148, 63, 73)");
       }
@@ -135,6 +139,7 @@ document.addEventListener("DOMContentLoaded", function() {
         const popup = document.createElement("div");
         popup.classList.add("inline-popup");
         
+        //Botões de Renomear e apagar conversa
         const renameBtn = document.createElement("button");
         renameBtn.textContent = "Renomear";
         const deleteBtn = document.createElement("button");
@@ -161,13 +166,15 @@ document.addEventListener("DOMContentLoaded", function() {
           const finishEdit = () => {
             if (input.value.trim() !== "") {
               conv.fields.nome = input.value.trim();
-          
-              // Enviar atualização para o back-end via Fetch API (AJAX)
+
+              // ----------------------------------------------------------------------------
+              // Enviar atualização do nome da conversa para o back-end via Fetch API (AJAX)
+              // ----------------------------------------------------------------------------
               fetch(`/rename/${conv.pk}`, {
                 method: "POST",
                 headers: {
                   "Content-Type": "application/json",
-                  "X-CSRFToken": CSRF_TOKEN, // Capturar o CSRF Token do Django
+                  "X-CSRFToken": CSRF_TOKEN, // Captura o CSRF Token do Django
                 },
                 body: JSON.stringify({ nome: conv.fields.nome }),
               })
@@ -176,15 +183,15 @@ document.addEventListener("DOMContentLoaded", function() {
                 if (data.success) {
                   console.log("Nome atualizado com sucesso!");
                 } else {
-                  console.error("Erro ao atualizar nome:", data.error);
+                  console.error("Erro ao atualizar nome:", data.error); //Exibe Error Message acima das mensagens
                   ShowErrorMessage("Houve algum erro na conexão. Não foi possível trocar o nome da conversa");
                 }
               })
-              .catch(error => console.error("Erro na requisição:", error));
+              .catch(error => console.error("Erro na requisição:", error)); //Exibe Error Message acima das mensagens
               ShowErrorMessage("Houve algum erro na conexão. Não foi possível trocar o nome da conversa");
             }
           
-            titleP.textContent = conv.fields.nome;
+            titleP.textContent = conv.fields.nome; //Atualiza título da conversa na sidebar
             li.replaceChild(titleP, input);
           };
           input.addEventListener("blur", finishEdit);
@@ -236,21 +243,23 @@ document.addEventListener("DOMContentLoaded", function() {
     deleteConfirmBtn.onclick = function() {
       conversations = conversations.filter(c => c.pk !== conv.pk);
       deleteModal.style.display = "none";
-      const currentConversaId = window.location.pathname.split('/').pop(); //Obtém ID da URL
-      // Enviar atualização para o back-end via Fetch API (AJAX)
+
+    // -------------------------------------------------------------------------
+    // Enviar atualização para deletar conversa no back-end via Fetch API (AJAX)
+    // -------------------------------------------------------------------------
     fetch(`/delete/${conv.pk}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "X-CSRFToken": CSRF_TOKEN, // Capturar o CSRF Token do Django
       },
-      body: JSON.stringify({ key: currentConversaId }),
+      body: JSON.stringify({ key: GetConversaID() }),
     })
     .then(response => response.json())
     .then(data => {
       if (data.success) {
         console.log("Conversa deletada com sucesso!");
-        if (currentConversaId == conv.pk) {
+        if (GetConversaID() == conv.pk) {
           window.location.href = "/chat/new";  // Redireciona para a página de novo chat
         }
         renderConversationsSidebar();
@@ -277,7 +286,9 @@ document.addEventListener("DOMContentLoaded", function() {
   });
   
   
+  // --------------
   // Configurações
+  // --------------
   configBtn.addEventListener("click", () => {
     configModal.style.display = "flex";
     profileDropdown.style.display = "none";
@@ -291,21 +302,23 @@ document.addEventListener("DOMContentLoaded", function() {
     const fontSize   = document.getElementById("fontSizeSelect").value;
     const fontFamily = document.getElementById("fontFamilySelect").value;
     
-    if (theme === "light") {
+    if (theme === "light") { // Define tema claro ou escuro
       document.body.classList.add("light-theme");
     } else {
       document.body.classList.remove("light-theme");
     }
-    document.body.style.fontSize   = fontSize;
-    document.body.style.fontFamily = fontFamily;
+    document.body.style.fontSize   = fontSize; //Define tamanho da fonte
+    document.body.style.fontFamily = fontFamily; //Define tipo da fonte
     configModal.style.display = "none";
-    let new_prompt = PromptInput.value
+    let new_prompt = PromptInput.value // Obtém novo prompt de instrução
 
+    // ----------------------------------------------------------------------
     // Atualiza prompt com instrução para IA no back-end via Fetch API (AJAX)
+    // ----------------------------------------------------------------------
     fetch("/change-prompt", {
       method: 'POST',
       headers: {
-        'X-CSRFToken': getCSRFToken()
+        'X-CSRFToken': CSRF_TOKEN
       },
       body: JSON.stringify({ message: new_prompt })
     })
@@ -314,56 +327,48 @@ document.addEventListener("DOMContentLoaded", function() {
       if (data.success) {
         console.log(data.message);
       } else {
-        console.error("Erro ao atualizar prompt :", data.error);
+        console.error("Erro ao atualizar prompt :", data.error); //Exibe mensagem de erro no topo da conversa
         ShowErrorMessage("Houve algum erro na conexão. Não foi possível deletar a mensagem");
       }
     })
-    .catch(error => console.error("Erro na requisição:", error));
+    .catch(error => console.error("Erro na requisição:", error)); //Exibe mensagem de erro no topo da conversa
     ShowErrorMessage("Houve algum erro na conexão. Não foi possível deletar a mensagem");
 
   });
 
-  // ---------------------------
-  // Obtenção dos parâmetros da URL e seleção da conversa atual
-  // ---------------------------
-  
-  
-  // ---------------------------
-  // Seleção dos elementos do DOM
-  // ---------------------------
-
-  // ---------------------------
+  // ------------------------------------------------
   // Função para renderizar as mensagens da conversa
-  // ---------------------------
+  // ------------------------------------------------
   function renderMessages() {
     chatWindow.innerHTML = "";
     mensagens.forEach(msg => {
-      const msgDiv = document.createElement("div");
+      const msgDiv = document.createElement("div"); //Cria uma nova div para guardar a mensagem
+      console.log(msg)
 
       let content = msg.fields.texto;
-      if(msg.fields.eh_do_usuario)
+      if(msg.fields.eh_do_usuario) //Se a mensagem é do usuário, marca como do usuário (CSS aplica os estilos diferentes)
       {
         msgDiv.classList.add("message", "user");
       }
       else
       {
-        msgDiv.classList.add("message", "bot");
-        content = marked.parse(msg.fields.texto);
+        msgDiv.classList.add("message", "bot"); //Se a mensagem é da IA, marca como do usuário (CSS aplica os estilos diferentes)
+        content = marked.parse(msg.fields.texto); // Passa a mensagem de Markdown para HTML
       }
 
-      msgDiv.innerHTML = content;
+      msgDiv.innerHTML = content; //Coloca a mensagem na div
       msgDiv.style.whiteSpace = "pre-line";
       chatWindow.appendChild(msgDiv);
     });
 
     ultimaMensagem = mensagens[mensagens.length - 1];
 
-    if(ultimaMensagem.fields.eh_do_usuario)
+    if(ultimaMensagem.fields.eh_do_usuario) //Se a última mensagem é do usuário
     {
       const waitMessageDiv = document.createElement("div");
-      waitMessageDiv.id = "wait-message";
+      waitMessageDiv.id = "wait-message"; //Cria div com animação de espera (animação feita no CSS)
 
-      let dot = null;
+      let dot = null; // Cria os três pontos
       for (let i = 0; i < 3; i++) {
         dot = document.createElement("span");
         dot.classList.add("dots");
@@ -400,6 +405,10 @@ function stopLoadingAnimation() {
   dots.forEach(dot => dot.style.marginBottom = "0px");
 }
 
+// -----------------------------------------------------------
+// Funções para exibição de avisos e erros no topo da conversa
+// -----------------------------------------------------------
+
 function ShowWarningMessage(waringMessage)
 {
   warning.innerHTML = "";
@@ -429,41 +438,45 @@ function ShowErrorMessage(errorMessage)
   warning.style.backgroundColor = "#fa1e1e";
 }
 
-  // ---------------------------
+  // ----------------------------------------------
   // Configuração dos eventos de envio de mensagem
-  // ---------------------------
+  // ----------------------------------------------
+
+  let isSending = false; // Variável que indica se há uma mensagem sendo enviada no momento
+
   sendBtn.addEventListener("click", () => {
     const messageText = messageInput.value.trim();
-    if (messageText == "")
-      { return; }
-    else if (messageText.length > MAX_CHARACTERS)
+    if (isSending == true) return; // Se outra mensagem estiver sendo enviada, não faz nada
+
+    else if (messageText == "") return; // Se a mensagem for vazia, não faz nada
+      
+    else if (messageText.length > MAX_CHARACTERS) //Se a mensagem exceder o limite de caracteres, exibe mensagem de aviso no topo da tela
     {
       const waringMessage = `Sua mensagem excedeu o limite de ${MAX_CHARACTERS} caracteres. Escreva uma mensagem mais curta!`;
       ShowWarningMessage(waringMessage);
-      messageInput.value = "";
       return;
     }
     else
-        { messageInput.value = ""; }
+        { messageInput.value = ""; } // Se a mensagem conter um número de caracteres dentro dos limites, esvazia o Input
+    
+    isSending = true; 
+    sendBtn.disabled = true; //Desabilita botão de envio
 
-    // Enviar atualização para o back-end via Fetch API (AJAX)
-    let conv_id;
-    if (conversa_id == "new")
+
+    if (GetConversaID() == "new")
     {
-        conv_id = "new";
-        chatWindow.innerHTML = "";
+        chatWindow.innerHTML = ""; //Se a conversa for nova, apaga mensagem de boas vindas
     }
-    else
-    {
-        conv_id = conversa_id;
-    }
-      mensagens.push({fields:{texto: messageText, eh_do_usuario: true}});
+      mensagens.push({fields:{texto: messageText, eh_do_usuario: true}}); //Guarda mensagem do usuário
+      sendBtn.disabled = true; //Desabilita botão de envio
 
       // Adiciona mensagem do usuário e salva
       renderMessages(); // Exibe nova mensagem do usuário
       startLoadingAnimation(); //Exibe animação de espera
 
-      // Enviar atualização para o back-end via Fetch API (AJAX)
+      // ---------------------------------------------------------------
+      // Enviar mensagem do usuário para o back-end via Fetch API (AJAX)
+      // ---------------------------------------------------------------
       async function enviarMensagem(messageText, conv_id) {
         try {
           const response = await fetch(`/chat/${conv_id}`, {
@@ -480,20 +493,14 @@ function ShowErrorMessage(errorMessage)
           if (data.success) {
             console.log("Mensagem salva com sucesso!");
       
-            // IA respondeu — você pode adicionar a mensagem
+            // IA respondeu, salva a mensagem da IA
 
-            if (conversa_id === "new") {
+            if (GetConversaID() === "new") { // Se a conversa for nova, redireciona para outra URL
               window.history.pushState({}, '', data.redirect);
-              //window.location.href = data.redirect;
-              // TODO: Pensar num mecanismo para obter somente a última conversa e última mensagem
-              
-              conversations.unshift({fields: {nome: data.nome_da_nova_conversa}, pk: data.nova_conversa_id});
-              conversa_id = data.nova_conversa_id;
-
+              conversations.unshift({fields: {nome: data.nome_da_nova_conversa}, pk: data.nova_conversa_id}); //Adiciona conversa na lista de conversas
               renderConversationsSidebar();
             }
-            mensagens.push({fields: { texto: data.message, eh_do_usuario: false }});
-            stopLoadingAnimation(); //Encerra animação
+            mensagens.push({fields: { texto: data.message, eh_do_usuario: false }}); // Adiciona mensagem da IA
             renderMessages(); // Mostra resposta da IA
 
           } else {
@@ -504,10 +511,14 @@ function ShowErrorMessage(errorMessage)
           console.error("Erro na requisição:", error);
           ShowErrorMessage("Houve algum erro na conexão. Não foi possível enviar a mensagem");
         }
-        
+        finally {
+          stopLoadingAnimation(); //Encerra animação
+          isSending = false; 
+          sendBtn.disabled = false; // Só reabilita aqui, no final do processo
+        }
       }
     
-    enviarMensagem(messageText, conv_id);
+    enviarMensagem(messageText, GetConversaID());
   });
 
   //Desabilita envio se o input estiver vazio
@@ -529,17 +540,19 @@ function ShowErrorMessage(errorMessage)
   });
   fileInput.addEventListener("change", () => {
     if (fileInput.files.length > 0) {
-      const file = fileInput.files[0];
+      const file = fileInput.files[0]; // Arquivo PDF selecionado para envio
       const formData = new FormData();
 
       formData.append("arquivo", file);
       formData.append("titulo", file.name);
 
+      // -----------------------------------------------
       // Enviar PDF para o back-end via Fetch API (AJAX)
-        fetch(`/upload/${conversa_id}`, {
+      // -----------------------------------------------
+        fetch(`/upload/${GetConversaID()}`, {
           method: 'POST',
           headers: {
-            'X-CSRFToken': getCSRFToken()
+            'X-CSRFToken': CSRF_TOKEN
           },
           body: formData
         })

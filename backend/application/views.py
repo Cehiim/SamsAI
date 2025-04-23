@@ -15,90 +15,89 @@ import openai
 from decouple import config
 
 @ensure_csrf_cookie
-def csrf_token_view(request):
+def csrf_token_view(request): # Retorna CSRF_TOKEN para o front
     return JsonResponse({'detail': 'CSRF cookie set'})
 
-
+########################## View da página de login ########################################
 class LoginView(View):
     def get(self, request):
-        if request.user.is_authenticated:
+        if request.user.is_authenticated: # Se o usuário está logado, redireciona para página de nova conversa
             return HttpResponseRedirect(reverse('new_chat'))
         
-        usuarios = Usuario.objects.all()
-
-        context = {
-            "usuarios": usuarios
-        }
-        return render(request, 'login.html', context)
+        return render(request, 'login.html')
 
     def post(self, request):
         if request.user.is_authenticated:
-            return HttpResponseRedirect(reverse('new_chat'))
+            return HttpResponseRedirect(reverse('new_chat')) # Se o usuário está logado, redireciona para página de nova conversa
 
         try:
-            email = request.POST.get("email")
+            email = request.POST.get("email") #Obtém email e senha digitados
             senha = request.POST.get("senha")
-            usuario = Usuario.objects.get(email=email)
+            usuario = Usuario.objects.get(email=email) # Tenta obter usuário a partir do email
 
-            if usuario is None:
+            if usuario is None: # Se não achar nenhum usuário com o email informado, exibe erro
                 messages.error(request, "Email não cadastrado ou incorreto")
                 return render(request, "login.html")
             
-            if not check_password(senha, usuario.password) and usuario.is_active:
+            if not check_password(senha, usuario.password) and usuario.is_active: # Se o usuário existir mas a senha não estiver correta, exibe erro
                 messages.error(request, "Senha incorreta")
                 return render(request, "login.html")
 
-            login(request, usuario)
+            login(request, usuario) # Loga o usuário e redireciona para nova conversa
             return HttpResponseRedirect(reverse('new_chat'))
         
-        except Exception as e:
+        except Exception as e: # Se obtém algum erro, exibe mensagem de erro
             messages.error(request, "Email não cadastrado ou incorreto")
         
         return render(request, "login.html")
-    
+
+########################## View de Logout ########################################
 class LogoutView(LoginRequiredMixin, View):
     def get(self, request):
-        if request.user.is_authenticated:
+        if request.user.is_authenticated: # Se o usuário está logado, faz o logout
             logout(request)
         return HttpResponseRedirect(reverse("login"))
 
+########################## View da página de Cadastro ########################################
 class CadastroView(View):
     def get(self, request):
         return render(request, 'cadastro.html')
         
     def post(self, request):
         try:
-            username = request.POST.get("nome")
+            username = request.POST.get("nome") # Tenta obter nome do usuário, email e senha1 e senha2 (para confirmação)
             email = request.POST.get("email")
             senha1 = request.POST.get("senha1")
             senha2 = request.POST.get("senha2")
 
             ###TODO: Elaborar métodos de validação melhores nas views no front###
-            if username != "" and email != "" and senha1 == senha2: 
-                novo_usuario = Usuario(username=username, email=email)
-                novo_usuario.set_password(senha1)
+            if username != "" and email != "" and senha1 == senha2:  # Verifica os dados fornecidos
+                novo_usuario = Usuario(username=username, email=email) # Cria novo usuário
+                novo_usuario.set_password(senha1) # Define senha e salva
                 novo_usuario.save()
-                login(request, novo_usuario)
+                login(request, novo_usuario) # Faz login e redireciona para View de nova conversa
                 return HttpResponseRedirect(reverse('new_chat'))
-            else:
+            
+            else: # Se os dados não passarem na verificação, exibe mensagem de erro
                 messages.error(request, "Não foi possível realizar o cadastro. Verifique os dados e tente novamente")
                 return render(request, "cadastro.html")
             
-        except:
+        except: # Se não conseguir obter os dados, exibe mensagem de erro
             messages.error(request, "Não foi possível realizar o cadastro. Verifique os dados e tente novamente")
             return render(request, "cadastro.html")
 
-
+########################## View da página de Conversa (Chat) com conversa já existente ########################################
 class ChatBotView(LoginRequiredMixin, View):
     def get(self, request, conversa_id):
         try:    
-            conversa_atual = Conversa.objects.get(pk=conversa_id)
-            if conversa_atual.usuario != request.user:
+            conversa_atual = Conversa.objects.get(pk=conversa_id) #Obtém conversa atual
+            if conversa_atual.usuario != request.user: # Se a conversa não pertencer ao usuário, exibe página de erro 404
                 raise Http404("Conversa não encontrada")
-        except Conversa.DoesNotExist:
+            
+        except Conversa.DoesNotExist: # Se a conversa não existir, exibe página de erro 404
             raise Http404("Conversa não encontrada")
         
-        usuario = Usuario.objects.get(pk=request.user.pk)
+        usuario = Usuario.objects.get(pk=request.user.pk) # Obtém usuário
 
         context = {
             "usuario": usuario,
@@ -107,26 +106,26 @@ class ChatBotView(LoginRequiredMixin, View):
         }
         return render(request, 'chat.html', context)
     
-    def post(self, request, conversa_id): # TODO: (AJAX) Arranjar um jeito melhor de renderizar as conversas      
+    def post(self, request, conversa_id):     
         try:
-            data = json.loads(request.body)
-            conversa_atual = Conversa.objects.get(pk=conversa_id)
-            usuario = Usuario.objects.get(pk=request.user.pk)
+            data = json.loads(request.body) # obtém requisição AJAX do front com a pergunta do usuário
+            conversa_atual = Conversa.objects.get(pk=conversa_id) # Obtém conversa atual
+            usuario = Usuario.objects.get(pk=request.user.pk) # Obtém usuário
 
-            if conversa_atual.usuario != request.user:
+            if conversa_atual.usuario != request.user: # Se a conversa atual não pertencer ao usuário, retorna Erro
                 return JsonResponse({"success": False, "error": "Conversa não encontrada"}, status=404)
 
-            conteudo_mensagem_usuario = data.get("message") #extrai conteúdo da mensagem
+            conteudo_mensagem_usuario = data.get("message") #extrai conteúdo da mensagem do usuário
 
             nova_mensagem_usuario = Mensagem(conversa=conversa_atual, texto=conteudo_mensagem_usuario) #Cria nova mensagem
             nova_mensagem_usuario.save()
 
-            client = openai.OpenAI(
+            client = openai.OpenAI( # Faz uma requisição para a API da IA
                 api_key=config('API_KEY'),
                 base_url="https://chat.maritaca.ai/api"
             )
 
-            response = client.chat.completions.create(
+            response = client.chat.completions.create( # Corpo da requisição
               model="sabia-3",
               messages=[
                 {"role": "system", "content": usuario.prompt_instrucao},
@@ -134,12 +133,12 @@ class ChatBotView(LoginRequiredMixin, View):
               ],
               max_tokens=8000
             )
-            mensagem_IA = response.choices[0].message.content 
+            mensagem_IA = response.choices[0].message.content # Extrai mensagem da IA
 
             nova_mensagem_IA = Mensagem(conversa=conversa_atual, texto=mensagem_IA, eh_do_usuario=False) #Salva resposta da IA
             nova_mensagem_IA.save()
 
-            return JsonResponse({"success": True, "message": mensagem_IA}, status=200)
+            return JsonResponse({"success": True, "message": mensagem_IA}, status=200) # Envia mensagem da IA para o front
         
         except Conversa.DoesNotExist:
             return JsonResponse({"success": False, "error": "Conversa não encontrada"}, status=404)
@@ -150,10 +149,10 @@ class ChatBotView(LoginRequiredMixin, View):
         except:
             return JsonResponse({"success": False, "error": "Método não permitido"}, status=405)
 
-
+########################## View da página de Nova Conversa (Chat) ########################################
 class NewChatBotView(LoginRequiredMixin, View):
     def get(self, request):
-        usuario = Usuario.objects.get(pk=request.user.pk)
+        usuario = Usuario.objects.get(pk=request.user.pk) # Obtém usuário
 
         context = {
             "usuario": usuario,
@@ -162,11 +161,11 @@ class NewChatBotView(LoginRequiredMixin, View):
         return render(request, "chat.html", context)
     
     def post(self, request):
-        usuario = Usuario.objects.get(pk=request.user.pk)
+        usuario = Usuario.objects.get(pk=request.user.pk) # Obtém usuário
         data = json.loads(request.body)
         conteudo_mensagem_usuario = data.get("message") #extrai conteúdo da mensagem
 
-        if len(conteudo_mensagem_usuario) >= 1:
+        if len(conteudo_mensagem_usuario) >= 1: # Cria um nome para a conversa a partir dos primeiros caracteres da mensagem
             if len(conteudo_mensagem_usuario) > 20:
                 nome_conversa = conteudo_mensagem_usuario[:20] + "..."
             else:
@@ -177,12 +176,12 @@ class NewChatBotView(LoginRequiredMixin, View):
             nova_mensagem = Mensagem(conversa=nova_conversa, texto=conteudo_mensagem_usuario) #Cria nova mensagem
             nova_mensagem.save()
             
-            client = openai.OpenAI(
+            client = openai.OpenAI( # Faz uma requisição para a API da IA
                 api_key=config('API_KEY'),
                 base_url="https://chat.maritaca.ai/api"
             )
 
-            response = client.chat.completions.create(
+            response = client.chat.completions.create( # Corpo da requisição
               model="sabia-3",
               messages=[
                 {"role": "system", "content": usuario.prompt_instrucao},
@@ -190,31 +189,33 @@ class NewChatBotView(LoginRequiredMixin, View):
               ],
               max_tokens=8000
             )
-            mensagem_IA = response.choices[0].message.content 
+            mensagem_IA = response.choices[0].message.content # Extrai mensagem da IA
 
             nova_mensagem_IA = Mensagem(conversa=nova_conversa, texto=mensagem_IA, eh_do_usuario=False) #Salva resposta da IA
             nova_mensagem_IA.save()
 
-            redirect_url = reverse('chat', args=[nova_conversa.pk])
+            redirect_url = reverse('chat', args=[nova_conversa.pk]) # Envia mensagem da IA para o front junto com o nome da nova conversa, ID e URL
             return JsonResponse({'success': True, "message": mensagem_IA, 'nome_da_nova_conversa': nome_conversa, 'nova_conversa_id': nova_conversa.pk, 'redirect': redirect_url})
         
         else:
             return JsonResponse({"success": False, "error": "Mensagem inválida"})
 
+######################### View da API para obter a lista de conversas ########################################
 class GetConversasView(LoginRequiredMixin, View):
     def get(self, request):
-        try:
-            usuario = Usuario.objects.get(pk=request.user.pk)
+        try: # Envia para o front todas as conversas do usuário numa lista, começando pelas mais recente, para compor a conversation sidebar no front
+            usuario = Usuario.objects.get(pk=request.user.pk) 
             queryset_conversas = Conversa.objects.filter(usuario=usuario).order_by('-data')
             todas_as_conversas = serializers.serialize('json', queryset_conversas)
             return JsonResponse(todas_as_conversas, safe=False)
         
         except:
             return JsonResponse({"success": False, "error": 'Erro na obtenção das conversas'})
-
+        
+######################### View da API para obter a lista de mensagens de uma conversa ########################################
 class GetMensagensView(LoginRequiredMixin, View):
     def get(self, request, conversa_id):
-        try:
+        try: # Envia para o front todas as mensagens de uma conversa especificada do usuário numa lista
             conversa_atual = Conversa.objects.get(pk=conversa_id)
             queryset_mensagens = conversa_atual.mensagens.all()
             mensagens = serializers.serialize('json', queryset_mensagens)
@@ -222,17 +223,18 @@ class GetMensagensView(LoginRequiredMixin, View):
         
         except:
             return JsonResponse({"success": False, "error": f'Erro na obtenção das mensagens da conversa de código: {conversa_id}'})
-            
+
+######################### View da API para renomear uma conversa ########################################            
 class RenameView(LoginRequiredMixin, View):
     def post(self, request, conversa_id):
         try:
-            data = json.loads(request.body)
+            data = json.loads(request.body) # Obtém do front a requisição com o novo nome
             conversa = Conversa.objects.get(pk=conversa_id)
 
-            if conversa.usuario != request.user:
+            if conversa.usuario != request.user: # Se a conversa não pertence ao usuário logado, exibe erro 404
                 raise JsonResponse({"success": False, "error": "Conversa não encontrada"}, status=404)
 
-            conversa.nome = data.get("nome", conversa.nome)
+            conversa.nome = data.get("nome", conversa.nome) # Obtém novo nome da conversa e salva
             conversa.save()
 
             return JsonResponse({"success": True, f"message": f"Conversa renomeada com sucesso!"}, status=200)
@@ -246,16 +248,17 @@ class RenameView(LoginRequiredMixin, View):
         except:
             return JsonResponse({"success": False, "error": "Método não permitido"}, status=405)
 
+######################### View da API para deletar uma conversa ########################################
 class DeleteView(LoginRequiredMixin, View):
     def post(self, request, conversa_id):
         try:
-            conversa_delete = Conversa.objects.get(pk=conversa_id)
+            conversa_delete = Conversa.objects.get(pk=conversa_id) #Obtém conversa a ser deletada pelo ID
 
-            if conversa_delete.usuario != request.user:
+            if conversa_delete.usuario != request.user: # Se a conversa não pertence ao usuário logado, exibe erro 404
                 raise JsonResponse({"success": False, "error": "Conversa não encontrada"}, status=404)
 
-            conversa_delete_nome = conversa_delete.nome
-            conversa_delete.delete()
+            conversa_delete_nome = conversa_delete.nome # Salva nome da conversa para exibir na resposta JSON
+            conversa_delete.delete() # Deleta conversa
             
             return JsonResponse({"success": True, "message": f"Conversa '{conversa_delete_nome}' deletada com sucesso!"}, status=200)
         
@@ -268,12 +271,13 @@ class DeleteView(LoginRequiredMixin, View):
         except:
             return JsonResponse({"success": False, "error": "Método não permitido"}, status=405)
 
+######################### View da API para fazer Upload de PDF ########################################
 class UploadView(LoginRequiredMixin, View):
     def post(self, request, conversa_id):
         try:
-            conversa = Conversa.objects.get(pk=conversa_id)
-            arquivo = request.FILES["arquivo"]
-            documento = Documento.objects.create(titulo=str(arquivo), arquivo=arquivo, conversa=conversa)
+            conversa = Conversa.objects.get(pk=conversa_id) # Obtém conversa
+            arquivo = request.FILES["arquivo"] # Obtém arquivo
+            documento = Documento.objects.create(titulo=str(arquivo), arquivo=arquivo, conversa=conversa) # Salva arquivo
 
             return JsonResponse({'success': True, 'message': 'Upload feito com sucesso!'})
         
@@ -286,6 +290,7 @@ class UploadView(LoginRequiredMixin, View):
         except:
             return JsonResponse({"success": False, "error": "Método não permitido"}, status=405)
 
+######################### View da API para atualizar prompt ########################################
 class ChangePromptView(LoginRequiredMixin, View):
     def post(self, request):
         try:
