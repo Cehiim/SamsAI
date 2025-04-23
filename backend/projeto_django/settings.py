@@ -52,13 +52,9 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'projeto_django.urls'
-
-STATIC_URL = "static/"
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-
-MEDIA_URL = 'media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+CSRF_COOKIE_HTTPONLY = False # precisa estar como False pra JS conseguir acessar
+#CSRF_COOKIE_SECURE = True # se estiver usando HTTPS
+#CSRF_TRUSTED_ORIGINS = ['https://seu-front.vercel.app']  # ou o domínio que for
 
 TEMPLATES = [
     {
@@ -130,7 +126,14 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+MEDIA_URL = 'media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
 LOGIN_URL = 'login'
+
+ROOT_URLCONF = 'projeto_django.urls'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field

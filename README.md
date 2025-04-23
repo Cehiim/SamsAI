@@ -1,3 +1,6 @@
+# Endereço na Internet
+ * http://3.18.83.210/
+
 # Passo a passo para configuração do ambiente virtual
 
 ## Pré-requisitos:
@@ -14,7 +17,7 @@ CREATE USER meu_user WITH PASSWORD 'minha_senha';
 ALTER ROLE meu_user SET client_encoding TO 'UTF8';
 ALTER ROLE meu_user SET default_transaction_isolation TO 'read committed';
 ALTER ROLE meu_user SET timezone TO 'UTC';
-GRANT ALL PRIVILEGES ON DATABASE meuprojeto TO meu_user;
+GRANT ALL PRIVILEGES ON DATABASE SamsAI TO meu_user;
 \q
 ```
 
@@ -86,12 +89,18 @@ python manage.py runserver
 ```
 
 # Configurando o Docker no ambiente de produção
-## 1) Prepare as imagens com docker compose
+## 0) Se você está apenas atualizando o código na instância, rode
+```
+docker-compose down --volumes --remove-orphans
+docker-compose up -d
+```
+
+## 1) Se você estiver criando as imagens do zero, prepare-as com docker compose
 ```
 docker-compose build --no-cache
 ```
 
-## 2) Rode o container em segundo plano
+## 2) Rode os containers em segundo plano
 ```
 docker-compose up -d
 ```
