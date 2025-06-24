@@ -11,8 +11,10 @@
   {% endif %}
   
   <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  
   <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="{% static 'js/script.js' %}"></script>
 
 </head>
@@ -28,10 +30,10 @@
       <div class="chat-header" id="chatHeader">
         <h1>SamsAI</h1>
         <div id="warning">
-          <!--Mensagens renderizadas pelo Javascript-->
+          <!--Mensagens de aviso/erro renderizadas pelo Javascript-->
         </div>
         <div id="profileIcon" class="profile-container">
-          <span class="profile-icon"><img style="width: 40px; height: 40px;" src="{% static 'img/user.svg' %}" alt="Perfil"></span>
+          <img class="profile-icon" src="{% static 'img/user.svg' %}" alt="Perfil">
           <div id="profileDropdown" class="profile-dropdown"> 
             <a id="logoutBtn" href="{% url 'logout' %}" class="profile-btn">Sair</a>
             <button id="configBtn" class="profile-btn">Configurações</button>
@@ -41,7 +43,7 @@
       <div class="chat-window" id="chatWindow">
         {% if conversa_id is None %}
         <div class="welcome-message">
-          <p>Olá, {{ usuario }}</p>
+          <p>Olá, {{ nome_usuario }}</p>
           <p>Como posso ajudar?</p>
         </div>
         {% else %}
@@ -93,7 +95,6 @@
       </span>
       <h2>Configurações</h2>
       <form id="configForm">
-        {% csrf_token %}
         <div class="config-section">
           <label>Escolha o tema:</label>
           <div>

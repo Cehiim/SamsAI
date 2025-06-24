@@ -64,8 +64,8 @@ class CadastroView(View):
         return render(request, 'cadastro.html')
         
     def post(self, request):
-        try:
-            username = request.POST.get("nome") # Tenta obter nome do usuário, email e senha1 e senha2 (para confirmação)
+        try: # Tenta obter nome do usuário, email e senha1 e senha2 (para confirmação)
+            username = request.POST.get("nome").title() #obtém nome do usuário com letra maiúscula
             email = request.POST.get("email")
             senha1 = request.POST.get("senha1")
             senha2 = request.POST.get("senha2")
@@ -155,7 +155,7 @@ class NewChatBotView(LoginRequiredMixin, View):
         usuario = Usuario.objects.get(pk=request.user.pk) # Obtém usuário
 
         context = {
-            "usuario": usuario,
+            "nome_usuario": usuario.username.title(), # Mostra nome do usuário com letra maiúscula
             "prompt_instrucao": usuario.prompt_instrucao
         }
         return render(request, "chat.html", context)

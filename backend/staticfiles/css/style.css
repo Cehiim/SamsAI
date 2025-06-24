@@ -119,12 +119,13 @@ p.not_found_message{
   font-size: 20px;
   color: #FFF;
   margin-bottom: 10px;
-  width: 1000px;
+  width: 60vw;
   text-align: center;
 }
 
 .messages > .alert.alert-error{
   background-color: #ff2626;
+  margin-top: 2vh;
   padding-bottom: 10px;
   padding-top: 10px;
   border-radius: 10px;
@@ -245,23 +246,25 @@ p.not_found_message{
 
 .profile-container {
   position: relative;
-  height: 60px;
-  width: 60px;
-  padding-top: 10px;
+  height: 5em;
+  width: 5em;
   background-color: #722F37;
-  border-radius: 30px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
 }
 
-.profile-icon {
-  font-size: 1.5rem;
-  cursor: pointer;
-  padding-left: 10px;
+.profile-icon{
+  width: auto;
+  max-height: 60%;
 }
 
 .profile-dropdown {
   display: none;
   position: absolute;
-  top: 30px;
+  top: 100%;
   right: 0;
   background-color: rgb(148, 63, 73);
   border-radius: 4px;
@@ -272,11 +275,12 @@ button.profile-btn {
   background: none;
   border: none;
   color: #fff;
-  padding: 10px;
+  padding: 0.8em;
   width: 100%;
   text-align: center;
   cursor: pointer;
   text-decoration: none;
+  font-size: 1em;
 }
 
 a.profile-btn {
@@ -284,12 +288,12 @@ a.profile-btn {
   background: none;
   border: none;
   color: #fff;
-  padding: 10px;
+  padding: 0.8em;
   width: 100%;
   text-align: center;
   cursor: pointer;
   text-decoration: none;
-  font-size: 14px;
+  font-size: 1em;
 }
 
 button:hover.profile-btn, a:hover.profile-btn {
@@ -541,6 +545,7 @@ button:hover.profile-btn, a:hover.profile-btn {
   border-radius: 4px;
   cursor: pointer;
   width: 100%;
+  font-size: 1.1rem;
 }
 
 .config-save-btn:hover {
@@ -690,12 +695,12 @@ body.light-theme .login-container {
 /* Menu inline de opções (aparece ao clicar no ícone de opções) */
 .inline-popup {
   position: absolute;
-  top: 50%;
-  left: 100%;
+  top: 115%;
+  left: 105%;
   transform: translate(0, -50%); 
   background: rgb(148, 63, 73);
-  border-radius: 4px;
-  padding: 5px;
+  border-radius: 5px;
+  padding: 0.8em;
   z-index: 9999;
 }
 
@@ -705,7 +710,8 @@ body.light-theme .login-container {
   color: #fff;
   cursor: pointer;
   display: block;
-  padding: 5px;
+  padding: 0.8em;
+  font-size: 1em;
   width: 100%;
   text-align: center;
 }

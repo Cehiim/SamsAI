@@ -170,25 +170,31 @@ document.addEventListener("DOMContentLoaded", function() {
               // ----------------------------------------------------------------------------
               // Enviar atualização do nome da conversa para o back-end via Fetch API (AJAX)
               // ----------------------------------------------------------------------------
-              fetch(`/rename/${conv.pk}`, {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  "X-CSRFToken": CSRF_TOKEN, // Captura o CSRF Token do Django
-                },
-                body: JSON.stringify({ nome: conv.fields.nome }),
-              })
-              .then(response => response.json())
-              .then(data => {
-                if (data.success) {
-                  console.log("Nome atualizado com sucesso!");
-                } else {
-                  console.error("Erro ao atualizar nome:", data.error); //Exibe Error Message acima das mensagens
+              async function renameButton() {
+                try{
+                  const response = await fetch(`/rename/${conv.pk}`, {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                      "X-CSRFToken": CSRF_TOKEN, // Captura o CSRF Token do Django
+                    },
+                    body: JSON.stringify({ nome: conv.fields.nome }),
+                });
+                  const data = await response.json();
+                  if (data.success) {
+                    console.log(data.message)
+                  }
+                  else {
+                    console.error("Erro ao atualizar nome:", data.error); //Exibe Error Message acima das mensagens
+                    ShowErrorMessage("Houve algum erro na conexão. Não foi possível trocar o nome da conversa");
+                  }
+                }
+                catch (error) {
+                  console.error("Erro na requisição:", error); //Exibe Error Message acima das mensagens
                   ShowErrorMessage("Houve algum erro na conexão. Não foi possível trocar o nome da conversa");
                 }
-              })
-              .catch(error => console.error("Erro na requisição:", error)); //Exibe Error Message acima das mensagens
-              ShowErrorMessage("Houve algum erro na conexão. Não foi possível trocar o nome da conversa");
+              }
+              renameButton();     
             }
           
             titleP.textContent = conv.fields.nome; //Atualiza título da conversa na sidebar
@@ -315,25 +321,30 @@ document.addEventListener("DOMContentLoaded", function() {
     // ----------------------------------------------------------------------
     // Atualiza prompt com instrução para IA no back-end via Fetch API (AJAX)
     // ----------------------------------------------------------------------
-    fetch("/change-prompt", {
-      method: 'POST',
-      headers: {
-        'X-CSRFToken': CSRF_TOKEN
-      },
-      body: JSON.stringify({ message: new_prompt })
-    })
-    .then(response => response.json())
-    .then(data => {
-      if (data.success) {
-        console.log(data.message);
-      } else {
-        console.error("Erro ao atualizar prompt :", data.error); //Exibe mensagem de erro no topo da conversa
-        ShowErrorMessage("Houve algum erro na conexão. Não foi possível deletar a mensagem");
+    async function changePrompt() {
+      try{
+        const response = await fetch("/change-prompt", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": CSRF_TOKEN,
+          },
+          body: JSON.stringify({ message: new_prompt }),
+        });
+        const data = await response.json();
+        if (data.success) {
+          console.log(data.message);
+        } else {
+          console.error("Erro ao atualizar prompt :", data.error); //Exibe mensagem de erro no topo da conversa
+          ShowErrorMessage("Houve algum erro na conexão. Não foi possível alterar o prompt de instrução");
+        }
       }
-    })
-    .catch(error => console.error("Erro na requisição:", error)); //Exibe mensagem de erro no topo da conversa
-    ShowErrorMessage("Houve algum erro na conexão. Não foi possível deletar a mensagem");
-
+      catch (error) {
+        console.error("Erro na requisição:", error); //Exibe mensagem de erro no topo da conversa
+        ShowErrorMessage("Houve algum erro na conexão. Não foi possível alterar o prompt de instrução");
+      }
+    }
+    changePrompt();
   });
 
   // ------------------------------------------------
@@ -343,7 +354,6 @@ document.addEventListener("DOMContentLoaded", function() {
     chatWindow.innerHTML = "";
     mensagens.forEach(msg => {
       const msgDiv = document.createElement("div"); //Cria uma nova div para guardar a mensagem
-      console.log(msg)
 
       let content = msg.fields.texto;
       if(msg.fields.eh_do_usuario) //Se a mensagem é do usuário, marca como do usuário (CSS aplica os estilos diferentes)
@@ -549,25 +559,32 @@ function ShowErrorMessage(errorMessage)
       // -----------------------------------------------
       // Enviar PDF para o back-end via Fetch API (AJAX)
       // -----------------------------------------------
-        fetch(`/upload/${GetConversaID()}`, {
-          method: 'POST',
-          headers: {
-            'X-CSRFToken': CSRF_TOKEN
-          },
-          body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
+      async function uploadFile() {
+        try{
+          const response = await fetch(`/upload/${GetConversaID()}`, {
+            method: 'POST',
+            headers: {
+              'X-CSRFToken': CSRF_TOKEN
+            },
+            body: formData
+          });
+          const data = await response.json();
           if (data.success) {
             console.log(data.message);
+
+            //TODO: Adicionar imagem do PDF na mensagem enviada pelo usuário
+            
           } else {
             console.error("Erro ao salvar arquivo:", data.error);
             ShowErrorMessage("Houve algum erro na conexão. Não foi possível realizar o upload do PDF");
           }
-        })
-        .catch(error => console.error("Erro na requisição:", error));
-        ShowErrorMessage("Houve algum erro na conexão. Não foi possível realizar o upload do PDF");
-
+        }
+        catch (error) {
+          console.error("Erro na requisição:", error);
+          ShowErrorMessage("Houve algum erro na conexão. Não foi possível realizar o upload do PDF");
+        }
+      }
+      uploadFile();
       renderMessages();
       fileInput.value = "";
     }

@@ -571,6 +571,9 @@ function ShowErrorMessage(errorMessage)
           const data = await response.json();
           if (data.success) {
             console.log(data.message);
+
+            //TODO: Adicionar imagem do PDF na mensagem enviada pelo usuário
+            
           } else {
             console.error("Erro ao salvar arquivo:", data.error);
             ShowErrorMessage("Houve algum erro na conexão. Não foi possível realizar o upload do PDF");
