@@ -69,11 +69,25 @@ document.addEventListener("DOMContentLoaded", function() {
   const configBtn     = document.getElementById("configBtn");
   const configModal   = document.getElementById("configModal");
   const closeModal    = document.getElementById("closeModal");
+  
+  const FileModal     = document.getElementById('file-modal');
+  const FileName      = document.getElementById('file-name');
+  const FileModalContent = document.getElementById('file-modal-content');
+  const ViewFile      = document.getElementById('view-file');
+  const CloseFile     = document.getElementById('close-file');
+  const CloseFileError = document.getElementById('close-file-error');
+  const ViewFileButtons = document.getElementById('ViewFileButtons');
+  const ViewFileButtonsError = document.getElementById('ViewFileButtonsError');
+  const ConfirmSendFile = document.getElementById('confirm-send-file');
+
   const configForm    = document.getElementById("configForm");
   const PromptInput   = document.getElementById("prompt-input");
 
   // Constante que define número máximo de caracteres na mensagem
   const MAX_CHARACTERS = 7500; 
+
+  // Variável global para obter URL do arquivo na pré-visualização (antes de enviar pro back)
+  let fileURL = ""; 
 
   // ---------------------------
   // Funções auxiliares
@@ -544,21 +558,69 @@ function ShowErrorMessage(errorMessage)
     }
   });
   
-  // Simulação de envio de arquivo
+    // -----------------------------------------------
+    // Pré visualização do arquivo PDF
+    // -----------------------------------------------
   fileBtn.addEventListener("click", () => {
     fileInput.click();
   });
   fileInput.addEventListener("change", () => {
+    FileModal.style.display = "flex";
+    
     if (fileInput.files.length > 0) {
       const file = fileInput.files[0]; // Arquivo PDF selecionado para envio
-      const formData = new FormData();
+      console.log(fileInput.files);
+      if (file && file.type === "application/pdf") {
+        fileURL = URL.createObjectURL(file);
+        FileName.innerText = file.name;
 
-      formData.append("arquivo", file);
-      formData.append("titulo", file.name);
+        ViewFile.innerHTML = `
+        <embed src="${fileURL}" type="application/pdf" width="100%" height="600px" />
+        `;
+        ViewFileButtons.style.display = "flex";
+        ViewFileButtonsError.style.display = "none";
+        FileModalContent.style.maxWidth = "none";
 
-      // -----------------------------------------------
-      // Enviar PDF para o back-end via Fetch API (AJAX)
-      // -----------------------------------------------
+      } else {
+        ViewFile.innerHTML = "<h1>Por favor, selecione um arquivo PDF válido.</h1>";
+        ViewFileButtons.style.display = "none";
+        ViewFileButtonsError.style.display = "flex";
+        FileModalContent.style.maxWidth = "";
+        
+      }   
+    }
+  });
+
+  CloseFile.addEventListener("click", () => {
+    FileModal.style.display = "none"
+    FileName.innerText = "";
+    ViewFile.innerHTML = "";
+    FileModalContent.innerHTML = "";
+    URL.revokeObjectURL(fileURL);
+    fileInput.value = "";
+  });
+
+  // Fecha modal em caso de arquivo não ser PDF
+  CloseFileError.addEventListener("click", () => {
+    CloseFile.click();
+  });
+
+  // Envia PDF pro back-end
+  ConfirmSendFile.addEventListener("click", () => {
+    FileModal.style.display = "none"
+    FileName.innerText = "";
+    ViewFile.innerHTML = "";
+    FileModalContent.innerHTML = "";
+    URL.revokeObjectURL(fileURL);
+
+    const file = fileInput.files[0]; // Arquivo PDF selecionado para envio
+    const formData = new FormData();
+    formData.append("arquivo", file);
+    formData.append("titulo", file.name);
+
+    // -----------------------------------------------
+    // Enviar PDF para o back-end via Fetch API (AJAX)
+    // -----------------------------------------------
       async function uploadFile() {
         try{
           const response = await fetch(`/upload/${GetConversaID()}`, {
@@ -584,10 +646,10 @@ function ShowErrorMessage(errorMessage)
           ShowErrorMessage("Houve algum erro na conexão. Não foi possível realizar o upload do PDF");
         }
       }
-      uploadFile();
-      renderMessages();
-      fileInput.value = "";
-    }
+
+    uploadFile();
+    console.log(fileInput);
+    renderMessages();
   });
   
   // Simulação de envio de áudio

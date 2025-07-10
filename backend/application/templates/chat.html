@@ -81,7 +81,25 @@
       <p id="deleteModalBody"></p>
       <div class="modal-actions">
         <button id="deleteCancelBtn">Cancelar</button>
-        <button id="deleteConfirmBtn">Apagar</button>
+        <button id="deleteConfirmBtn" class="deleteConfirmBtn">Apagar</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="file-modal" class="modal">
+    <div id="file-modal-content" class="modal-content">
+      <div>
+        <h2 id="file-name"></h2>
+      </div>
+      <div id="view-file">
+        <!-- Visualização do PDF -->
+      </div>
+      <div id="ViewFileButtons" class="modal-actions">
+        <button id="close-file" class="deleteConfirmBtn">Cancelar Envio</button>
+        <button id="confirm-send-file">Confirmar Envio</button>
+      </div>
+      <div id="ViewFileButtonsError" class="modal-actions">
+        <button id="close-file-error">OK</button>
       </div>
     </div>
   </div>
