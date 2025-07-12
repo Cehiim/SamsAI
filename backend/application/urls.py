@@ -1,4 +1,6 @@
 from django.urls import path
+from django.conf import settings
+from django.conf.urls.static import static
 from .views import *
 
 urlpatterns = [
@@ -9,9 +11,11 @@ urlpatterns = [
     path('cadastro', CadastroView.as_view(), name='cadastro'),
     path('rename/<int:conversa_id>', RenameView.as_view(), name='rename'),
     path('delete/<int:conversa_id>', DeleteView.as_view(), name='delete'),
-    path('upload/<int:conversa_id>', UploadView.as_view(), name='upload'),
     path('change-prompt', ChangePromptView.as_view(), name='change-prompt'),
     path('csrf', csrf_token_view, name='csrf'),
     path('api/conversas', GetConversasView.as_view(), name='get-conversas'),
     path('api/mensagens/<int:conversa_id>', GetMensagensView.as_view(), name='get-mensagens'),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

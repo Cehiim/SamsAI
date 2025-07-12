@@ -13,6 +13,7 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 import json
 import openai
 from decouple import config
+from datetime import datetime
 
 @ensure_csrf_cookie
 def csrf_token_view(request): # Retorna CSRF_TOKEN para o front
@@ -108,17 +109,21 @@ class ChatBotView(LoginRequiredMixin, View):
     
     def post(self, request, conversa_id):     
         try:
-            data = json.loads(request.body) # obtém requisição AJAX do front com a pergunta do usuário
+            conteudo_mensagem_usuario = request.POST["message"] # obtém requisição AJAX do front com a pergunta do usuário
             conversa_atual = Conversa.objects.get(pk=conversa_id) # Obtém conversa atual
             usuario = Usuario.objects.get(pk=request.user.pk) # Obtém usuário
 
             if conversa_atual.usuario != request.user: # Se a conversa atual não pertencer ao usuário, retorna Erro
                 return JsonResponse({"success": False, "error": "Conversa não encontrada"}, status=404)
 
-            conteudo_mensagem_usuario = data.get("message") #extrai conteúdo da mensagem do usuário
-
             nova_mensagem_usuario = Mensagem(conversa=conversa_atual, texto=conteudo_mensagem_usuario) #Cria nova mensagem
             nova_mensagem_usuario.save()
+
+            arquivo = request.FILES.get("arquivo")
+            if arquivo: # Anexa arquivo a mensagem, se houver
+                documento = Documento.objects.create(titulo=str(arquivo), arquivo=arquivo, mensagem=nova_mensagem_usuario) # Salva arquivo
+            else:
+                documento = None
 
             client = openai.OpenAI( # Faz uma requisição para a API da IA
                 api_key=config('API_KEY'),
@@ -162,8 +167,7 @@ class NewChatBotView(LoginRequiredMixin, View):
     
     def post(self, request):
         usuario = Usuario.objects.get(pk=request.user.pk) # Obtém usuário
-        data = json.loads(request.body)
-        conteudo_mensagem_usuario = data.get("message") #extrai conteúdo da mensagem
+        conteudo_mensagem_usuario = request.POST["message"] #extrai conteúdo da mensagem 
 
         if len(conteudo_mensagem_usuario) >= 1: # Cria um nome para a conversa a partir dos primeiros caracteres da mensagem
             if len(conteudo_mensagem_usuario) > 20:
@@ -175,6 +179,12 @@ class NewChatBotView(LoginRequiredMixin, View):
             nova_conversa.save()
             nova_mensagem = Mensagem(conversa=nova_conversa, texto=conteudo_mensagem_usuario) #Cria nova mensagem
             nova_mensagem.save()
+
+            arquivo = request.FILES.get("arquivo")
+            if arquivo: # Anexa arquivo a mensagem, se houver
+                documento = Documento.objects.create(titulo=str(arquivo), arquivo=arquivo, mensagem=nova_mensagem) # Salva arquivo
+            else:
+                documento = None
             
             client = openai.OpenAI( # Faz uma requisição para a API da IA
                 api_key=config('API_KEY'),
@@ -195,7 +205,18 @@ class NewChatBotView(LoginRequiredMixin, View):
             nova_mensagem_IA.save()
 
             redirect_url = reverse('chat', args=[nova_conversa.pk]) # Envia mensagem da IA para o front junto com o nome da nova conversa, ID e URL
-            return JsonResponse({'success': True, "message": mensagem_IA, 'nome_da_nova_conversa': nome_conversa, 'nova_conversa_id': nova_conversa.pk, 'redirect': redirect_url})
+            return JsonResponse({
+                'success': True, 
+                'message': mensagem_IA, 
+                'nome_da_nova_conversa': nome_conversa, 
+                'nova_conversa_id': nova_conversa.pk, 
+                'redirect': redirect_url,
+                'documento': {
+                    'pk': documento.pk,
+                    'titulo': documento.titulo,
+                    'arquivo_url': documento.arquivo.url
+                } if documento else None
+            })
         
         else:
             return JsonResponse({"success": False, "error": "Mensagem inválida"})
@@ -217,8 +238,24 @@ class GetMensagensView(LoginRequiredMixin, View):
     def get(self, request, conversa_id):
         try: # Envia para o front todas as mensagens de uma conversa especificada do usuário numa lista
             conversa_atual = Conversa.objects.get(pk=conversa_id)
-            queryset_mensagens = conversa_atual.mensagens.all()
-            mensagens = serializers.serialize('json', queryset_mensagens)
+            queryset_mensagens = conversa_atual.mensagens.select_related('documento').all()
+
+            mensagens = []
+            for m in queryset_mensagens:
+                mensagens.append({
+                    'pk': m.pk,
+                    'fields': {
+                        'texto': m.texto,
+                        'eh_do_usuario': m.eh_do_usuario,
+                        'data': m.data,
+                        'documento': {
+                            'pk': m.documento.pk,
+                            'titulo': m.documento.titulo,
+                            'arquivo_url': m.documento.arquivo.url
+                        } if hasattr(m, 'documento') and m.documento else None
+                    } 
+                })
+
             return JsonResponse(mensagens, safe=False)
         
         except:
@@ -264,25 +301,6 @@ class DeleteView(LoginRequiredMixin, View):
         
         except Conversa.DoesNotExist:
             return JsonResponse({"success": False, "error": f"Conversa '{conversa_delete_nome}' não encontrada"}, status=404)
-        
-        except Exception as e:
-            return JsonResponse({"success": False, "error": str(e)}, status=500)
-        
-        except:
-            return JsonResponse({"success": False, "error": "Método não permitido"}, status=405)
-
-######################### View da API para fazer Upload de PDF ########################################
-class UploadView(LoginRequiredMixin, View):
-    def post(self, request, conversa_id):
-        try:
-            conversa = Conversa.objects.get(pk=conversa_id) # Obtém conversa
-            arquivo = request.FILES["arquivo"] # Obtém arquivo
-            documento = Documento.objects.create(titulo=str(arquivo), arquivo=arquivo, conversa=conversa) # Salva arquivo
-
-            return JsonResponse({'success': True, 'message': 'Upload feito com sucesso!'})
-        
-        except Conversa.DoesNotExist:
-            return JsonResponse({"success": False, "error": f"Conversa '{conversa.nome}' não encontrada"}, status=404)
         
         except Exception as e:
             return JsonResponse({"success": False, "error": str(e)}, status=500)

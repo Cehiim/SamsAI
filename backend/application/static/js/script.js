@@ -43,7 +43,7 @@ document.addEventListener("DOMContentLoaded", function() {
     async function loadMessages() {
       const response = await fetch(`/api/mensagens/${GetConversaID()}`);
       const data = await response.json();
-      mensagens = JSON.parse(data);
+      mensagens = data;
 
       // Renderiza as mensagens ao carregar a página
       renderMessages();
@@ -79,6 +79,9 @@ document.addEventListener("DOMContentLoaded", function() {
   const ViewFileButtons = document.getElementById('ViewFileButtons');
   const ViewFileButtonsError = document.getElementById('ViewFileButtonsError');
   const ConfirmSendFile = document.getElementById('confirm-send-file');
+  const DesattachFile = document.getElementById('desattach-file');
+  const ShowAttachedFile = document.getElementById('show-attached-file');
+  const AttachedFileName = document.getElementById('attached-file-name');
 
   const configForm    = document.getElementById("configForm");
   const PromptInput   = document.getElementById("prompt-input");
@@ -369,18 +372,43 @@ document.addEventListener("DOMContentLoaded", function() {
     mensagens.forEach(msg => {
       const msgDiv = document.createElement("div"); //Cria uma nova div para guardar a mensagem
 
-      let content = msg.fields.texto;
       if(msg.fields.eh_do_usuario) //Se a mensagem é do usuário, marca como do usuário (CSS aplica os estilos diferentes)
       {
         msgDiv.classList.add("message", "user");
+        
+        if(msg.fields.documento !== null)
+        {
+          const AttachFileDiv = document.createElement("div");
+          const UserMsg = document.createElement("p");
+          AttachFileDiv.classList.add('message-file-attached')
+
+          let arquivo_URL;
+          if(msg.fields.documento.arquivo_url === null)
+            arquivo_URL = '#';
+          else
+            arquivo_URL = msg.fields.documento.arquivo_url;
+
+          AttachFileDiv.innerHTML = `
+          <a href="${arquivo_URL}" alt="Documento PDF anexado"><i class="fa fa-file-pdf fa-3x"></i></a>
+          <p class="attached-file-name">${msg.fields.documento.titulo}</p>
+          `;
+
+          UserMsg.textContent = msg.fields.texto;
+          msgDiv.appendChild(AttachFileDiv);
+          msgDiv.appendChild(UserMsg)
+        }
+        else
+        {
+          const content = msg.fields.texto;
+          msgDiv.textContent = content; //Adiciona conteúdo da mensagem do usuário
+        }  
       }
       else
       {
         msgDiv.classList.add("message", "bot"); //Se a mensagem é da IA, marca como do usuário (CSS aplica os estilos diferentes)
-        content = marked.parse(msg.fields.texto); // Passa a mensagem de Markdown para HTML
+        const content = marked.parse(msg.fields.texto); // Passa a mensagem de Markdown para HTML
+        msgDiv.innerHTML = content; //Coloca a mensagem na div
       }
-
-      msgDiv.innerHTML = content; //Coloca a mensagem na div
       msgDiv.style.whiteSpace = "pre-line";
       chatWindow.appendChild(msgDiv);
     });
@@ -436,10 +464,9 @@ function stopLoadingAnimation() {
 function ShowWarningMessage(waringMessage)
 {
   warning.innerHTML = "";
-  const warningIcon = document.createElement("img");
-  warningIcon.src = "/static/img/triangle-exclamation.svg"
-  warningIcon.style.height = "20px"
-  warningIcon.style.width = "20px"
+  const warningIcon = document.createElement("i");
+  warningIcon.classList.add("fa");
+  warningIcon.classList.add("fa-triangle-exclamation");
   warning.appendChild(warningIcon)
 
   warning.style.backgroundColor = "#d5a300";
@@ -491,7 +518,21 @@ function ShowErrorMessage(errorMessage)
     {
         chatWindow.innerHTML = ""; //Se a conversa for nova, apaga mensagem de boas vindas
     }
-      mensagens.push({fields:{texto: messageText, eh_do_usuario: true}}); //Guarda mensagem do usuário
+
+    const formData = new FormData();
+    let file_name = null;
+
+    //Obtém arquivo PDF anexado
+    if(fileInput.files.length > 0)
+    {
+      const file = fileInput.files[0]; // Arquivo PDF selecionado para envio
+      formData.append("arquivo", file);
+      formData.append("titulo", file.name);
+      file_name = file.name;
+    }
+    formData.append("message", messageText)
+    mensagens.push({fields: { texto: messageText, eh_do_usuario: true, documento: {titulo: file_name, arquivo_url: null} }}); // Guarda mensagem do usuário
+
       sendBtn.disabled = true; //Desabilita botão de envio
 
       // Adiciona mensagem do usuário e salva
@@ -501,15 +542,14 @@ function ShowErrorMessage(errorMessage)
       // ---------------------------------------------------------------
       // Enviar mensagem do usuário para o back-end via Fetch API (AJAX)
       // ---------------------------------------------------------------
-      async function enviarMensagem(messageText, conv_id) {
+      async function enviarMensagem(conv_id) {
         try {
           const response = await fetch(`/chat/${conv_id}`, {
             method: "POST",
             headers: {
-              "Content-Type": "application/json",
               "X-CSRFToken": CSRF_TOKEN,
             },
-            body: JSON.stringify({ message: messageText }),
+            body: formData
           });
       
           const data = await response.json();
@@ -539,10 +579,10 @@ function ShowErrorMessage(errorMessage)
           stopLoadingAnimation(); //Encerra animação
           isSending = false; 
           sendBtn.disabled = false; // Só reabilita aqui, no final do processo
+          DesattachFile.click(); // Desanexa o arquivo
         }
       }
-    
-    enviarMensagem(messageText, GetConversaID());
+    enviarMensagem(GetConversaID());
   });
 
   //Desabilita envio se o input estiver vazio
@@ -558,9 +598,9 @@ function ShowErrorMessage(errorMessage)
     }
   });
   
-    // -----------------------------------------------
-    // Pré visualização do arquivo PDF
-    // -----------------------------------------------
+  // -----------------------------------------------
+  // Pré visualização do arquivo PDF
+  // -----------------------------------------------
   fileBtn.addEventListener("click", () => {
     fileInput.click();
   });
@@ -569,7 +609,6 @@ function ShowErrorMessage(errorMessage)
     
     if (fileInput.files.length > 0) {
       const file = fileInput.files[0]; // Arquivo PDF selecionado para envio
-      console.log(fileInput.files);
       if (file && file.type === "application/pdf") {
         fileURL = URL.createObjectURL(file);
         FileName.innerText = file.name;
@@ -586,16 +625,15 @@ function ShowErrorMessage(errorMessage)
         ViewFileButtons.style.display = "none";
         ViewFileButtonsError.style.display = "flex";
         FileModalContent.style.maxWidth = "";
-        
       }   
     }
   });
 
+  //Cancela anexamento do PDF
   CloseFile.addEventListener("click", () => {
     FileModal.style.display = "none"
     FileName.innerText = "";
     ViewFile.innerHTML = "";
-    FileModalContent.innerHTML = "";
     URL.revokeObjectURL(fileURL);
     fileInput.value = "";
   });
@@ -605,51 +643,22 @@ function ShowErrorMessage(errorMessage)
     CloseFile.click();
   });
 
-  // Envia PDF pro back-end
+  //Desanexa PDF na mensagem
+  DesattachFile.addEventListener("click", () => {
+    CloseFile.click();
+    ShowAttachedFile.style.display = "";
+    AttachedFileName.textContent = "";
+  })
+
+  // Coloca o PDF como anexado à mensagem
   ConfirmSendFile.addEventListener("click", () => {
     FileModal.style.display = "none"
     FileName.innerText = "";
     ViewFile.innerHTML = "";
-    FileModalContent.innerHTML = "";
-    URL.revokeObjectURL(fileURL);
+    ShowAttachedFile.style.display = "flex";
 
-    const file = fileInput.files[0]; // Arquivo PDF selecionado para envio
-    const formData = new FormData();
-    formData.append("arquivo", file);
-    formData.append("titulo", file.name);
-
-    // -----------------------------------------------
-    // Enviar PDF para o back-end via Fetch API (AJAX)
-    // -----------------------------------------------
-      async function uploadFile() {
-        try{
-          const response = await fetch(`/upload/${GetConversaID()}`, {
-            method: 'POST',
-            headers: {
-              'X-CSRFToken': CSRF_TOKEN
-            },
-            body: formData
-          });
-          const data = await response.json();
-          if (data.success) {
-            console.log(data.message);
-
-            //TODO: Adicionar imagem do PDF na mensagem enviada pelo usuário
-            
-          } else {
-            console.error("Erro ao salvar arquivo:", data.error);
-            ShowErrorMessage("Houve algum erro na conexão. Não foi possível realizar o upload do PDF");
-          }
-        }
-        catch (error) {
-          console.error("Erro na requisição:", error);
-          ShowErrorMessage("Houve algum erro na conexão. Não foi possível realizar o upload do PDF");
-        }
-      }
-
-    uploadFile();
-    console.log(fileInput);
-    renderMessages();
+    const file = fileInput.files[0];
+    AttachedFileName.textContent = file.name;
   });
   
   // Simulação de envio de áudio

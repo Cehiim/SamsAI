@@ -11,7 +11,8 @@
   {% endif %}
   
   <link rel="stylesheet" href="{% static 'css/style.css' %}">
-  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"/>
+
   <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -33,7 +34,7 @@
           <!--Mensagens de aviso/erro renderizadas pelo Javascript-->
         </div>
         <div id="profileIcon" class="profile-container">
-          <img class="profile-icon" src="{% static 'img/user.svg' %}" alt="Perfil">
+          <i class="fa fa-user fa-3x" alt="Ícone de perfil"></i>
           <div id="profileDropdown" class="profile-dropdown"> 
             <a id="logoutBtn" href="{% url 'logout' %}" class="profile-btn">Sair</a>
             <button id="configBtn" class="profile-btn">Configurações</button>
@@ -50,11 +51,16 @@
           <!--Mensagens renderizadas pelo Javascript-->
         {% endif %}
       </div>
-      <div id="chat-input">
-        <button id="fileBtn" class="btn-file"><img style="width: 25px; height: 30px;" src="{% static 'img/paperclip.svg' %}" alt="Envie um PDF"></button>
-        <input name="arquivo" type="file" id="fileInput" style="display:none;">
+      <div id="show-attached-file" class="chat-input">
+        <i class="fa fa-file-pdf fa-3x"></i>
+        <p id="attached-file-name"></p>
+        <i id="desattach-file" class="fa fa-xmark fa-2x"></i>
+      </div>
+      <div class="chat-input">
+        <button id="fileBtn" class="btn-file"><i class="fa fa-paperclip fa-2x"></i></button>
+        <input name="arquivo" type="file" id="fileInput" style="display: none;">
         <input name="mensagem_usuario" type="text" autocomplete="off" id="messageInput" contenteditable="true" placeholder="Digite sua mensagem...">
-        <button id="audioBtn" class="btn-audio"><img style="width: 25px; height: 30px;" src="{% static 'img/microphone.svg' %}" alt="Envie um áudio"></button>
+        <button id="audioBtn" class="btn-audio"><i class="fa fa-microphone fa-2x"></i></button>
         <button id="sendBtn" class="btn-send">Enviar</button>
       </div>
     </div>
@@ -86,6 +92,7 @@
     </div>
   </div>
 
+  <!-- Modal de Pré-visualização do PDF -->
   <div id="file-modal" class="modal">
     <div id="file-modal-content" class="modal-content">
       <div>
@@ -95,8 +102,8 @@
         <!-- Visualização do PDF -->
       </div>
       <div id="ViewFileButtons" class="modal-actions">
-        <button id="close-file" class="deleteConfirmBtn">Cancelar Envio</button>
-        <button id="confirm-send-file">Confirmar Envio</button>
+        <button id="close-file" class="deleteConfirmBtn">Cancelar</button>
+        <button id="confirm-send-file">Anexar PDF</button>
       </div>
       <div id="ViewFileButtonsError" class="modal-actions">
         <button id="close-file-error">OK</button>
@@ -109,7 +116,7 @@
   <div id="configModal" class="modal">
     <div class="modal-content">
       <span id="closeModal" class="close-button">
-        <img style="height: 40px; width: 40px;" src="{% static 'img/xmark.svg' %}" alt="Fechar Configurações">
+        <i class="fa fa-xmark fa-2x"></i>
       </span>
       <h2>Configurações</h2>
       <form id="configForm">
