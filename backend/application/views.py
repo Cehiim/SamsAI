@@ -214,7 +214,6 @@ class NewChatBotView(LoginRequiredMixin, View):
                 'documento': {
                     'pk': documento.pk,
                     'titulo': documento.titulo,
-                    'arquivo_url': documento.arquivo.url
                 } if documento else None
             })
         

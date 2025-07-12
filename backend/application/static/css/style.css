@@ -400,6 +400,20 @@ button:hover.profile-btn, a:hover.profile-btn {
   color: #000;
 }
 
+.message-file-attached{
+  background-color: #FFF;
+  border-radius: 4px;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.message-file-attached a{
+  color: #722F37;
+  margin-right: 10px;
+}
+
 .message.bot {
   background-color: #722F37;
   align-self: flex-start;

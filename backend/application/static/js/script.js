@@ -367,6 +367,47 @@ document.addEventListener("DOMContentLoaded", function() {
   // ------------------------------------------------
   // Função para renderizar as mensagens da conversa
   // ------------------------------------------------
+  function slugify(text) {
+    return text
+      .normalize('NFD')                     // Separa acentos das letras
+      .replace(/[\u0300-\u036f]/g, '')     // Remove os acentos
+      .replace(/\s+/g, '_')                // Substitui espaços por "_"
+      .replace(/[^\w\-\.]+/g, '')          // Remove caracteres especiais (exceto "_", "-", ".")
+      .replace(/\_\_+/g, '_')              // Remove underscores duplicados
+      .replace(/^_+|_+$/g, '')             // Remove underscores no começo/fim
+  }
+
+  function createUserMessage(msgDiv, msg) 
+  {
+    msgDiv.classList.add("message", "user");
+        
+    if(msg.fields.documento !== null)
+    {
+      const AttachFileDiv = document.createElement("div");
+      const UserMsg = document.createElement("p");
+      AttachFileDiv.classList.add('message-file-attached')
+      AttachFileDiv.innerHTML = `
+      <a href="/media/upload/${slugify(msg.fields.documento.titulo)}" target="_blank" alt="Documento PDF anexado"><i class="fa fa-file-pdf fa-3x"></i></a>
+      <p class="attached-file-name">${slugify(msg.fields.documento.titulo)}</p>
+      `;
+      UserMsg.textContent = msg.fields.texto;
+      msgDiv.appendChild(AttachFileDiv);
+      msgDiv.appendChild(UserMsg)
+    }
+    else
+    {
+      const content = msg.fields.texto;
+      msgDiv.textContent = content; //Adiciona conteúdo da mensagem do usuário
+    }  
+  }
+
+  function createBotMessage(msgDiv, msg)
+  {
+    msgDiv.classList.add("message", "bot"); //Se a mensagem é da IA, marca como do usuário (CSS aplica os estilos diferentes)
+    const content = marked.parse(msg.fields.texto); // Passa a mensagem de Markdown para HTML
+    msgDiv.innerHTML = content; //Coloca a mensagem na div
+  }
+
   function renderMessages() {
     chatWindow.innerHTML = "";
     mensagens.forEach(msg => {
@@ -374,60 +415,49 @@ document.addEventListener("DOMContentLoaded", function() {
 
       if(msg.fields.eh_do_usuario) //Se a mensagem é do usuário, marca como do usuário (CSS aplica os estilos diferentes)
       {
-        msgDiv.classList.add("message", "user");
-        
-        if(msg.fields.documento !== null)
-        {
-          const AttachFileDiv = document.createElement("div");
-          const UserMsg = document.createElement("p");
-          AttachFileDiv.classList.add('message-file-attached')
-
-          let arquivo_URL;
-          if(msg.fields.documento.arquivo_url === null)
-            arquivo_URL = '#';
-          else
-            arquivo_URL = msg.fields.documento.arquivo_url;
-
-          AttachFileDiv.innerHTML = `
-          <a href="${arquivo_URL}" alt="Documento PDF anexado"><i class="fa fa-file-pdf fa-3x"></i></a>
-          <p class="attached-file-name">${msg.fields.documento.titulo}</p>
-          `;
-
-          UserMsg.textContent = msg.fields.texto;
-          msgDiv.appendChild(AttachFileDiv);
-          msgDiv.appendChild(UserMsg)
-        }
-        else
-        {
-          const content = msg.fields.texto;
-          msgDiv.textContent = content; //Adiciona conteúdo da mensagem do usuário
-        }  
+        createUserMessage(msgDiv, msg);
       }
       else
       {
-        msgDiv.classList.add("message", "bot"); //Se a mensagem é da IA, marca como do usuário (CSS aplica os estilos diferentes)
-        const content = marked.parse(msg.fields.texto); // Passa a mensagem de Markdown para HTML
-        msgDiv.innerHTML = content; //Coloca a mensagem na div
+        createBotMessage(msgDiv, msg);
       }
       msgDiv.style.whiteSpace = "pre-line";
       chatWindow.appendChild(msgDiv);
     });
+    chatWindow.scrollTop = chatWindow.scrollHeight;
+  }
 
-    ultimaMensagem = mensagens[mensagens.length - 1];
+  // ---------------------------------------------
+  // Função para renderizar as mensagens recentes
+  // ---------------------------------------------
 
-    if(ultimaMensagem.fields.eh_do_usuario) //Se a última mensagem é do usuário
-    {
-      const waitMessageDiv = document.createElement("div");
-      waitMessageDiv.id = "wait-message"; //Cria div com animação de espera (animação feita no CSS)
+  function renderLastMessage() {
 
-      let dot = null; // Cria os três pontos
-      for (let i = 0; i < 3; i++) {
-        dot = document.createElement("span");
-        dot.classList.add("dots");
-        waitMessageDiv.appendChild(dot);
+      const msgDiv = document.createElement("div"); //Cria uma nova div para guardar a mensagem
+      chatWindow.appendChild(msgDiv);
+
+      const ultimaMensagem = mensagens[mensagens.length - 1]
+
+      if(ultimaMensagem.fields.eh_do_usuario) //Se a mensagem é do usuário, marca como do usuário (CSS aplica os estilos diferentes)
+      {
+        createUserMessage(msgDiv, ultimaMensagem);
+        
+        const waitMessageDiv = document.createElement("div");
+        waitMessageDiv.id = "wait-message"; //Cria div com animação de espera (animação feita no CSS)
+        let dot = null; // Cria os três pontos
+        for (let i = 0; i < 3; i++) {
+          dot = document.createElement("span");
+          dot.classList.add("dots");
+          waitMessageDiv.appendChild(dot);
+        }
+        chatWindow.appendChild(waitMessageDiv);
       }
-      chatWindow.appendChild(waitMessageDiv);
-    }
+      else
+      {
+        createBotMessage(msgDiv, ultimaMensagem);
+      }
+      msgDiv.style.whiteSpace = "pre-line";
+      
 
     chatWindow.scrollTop = chatWindow.scrollHeight;
   }
@@ -449,12 +479,9 @@ document.addEventListener("DOMContentLoaded", function() {
 }
 
 function stopLoadingAnimation() {
-  clearInterval(animationInterval);
-  animationInterval = null;
-
-  // Resetar os pontos
-  const dots = document.querySelectorAll("#wait-message .dots");
-  dots.forEach(dot => dot.style.marginBottom = "0px");
+  // Apaga a div com os pontos
+  const waitMessageDiv = document.getElementById('wait-message');
+  waitMessageDiv.remove();
 }
 
 // -----------------------------------------------------------
@@ -513,14 +540,12 @@ function ShowErrorMessage(errorMessage)
     isSending = true; 
     sendBtn.disabled = true; //Desabilita botão de envio
 
-
     if (GetConversaID() == "new")
     {
         chatWindow.innerHTML = ""; //Se a conversa for nova, apaga mensagem de boas vindas
     }
 
     const formData = new FormData();
-    let file_name = null;
 
     //Obtém arquivo PDF anexado
     if(fileInput.files.length > 0)
@@ -528,15 +553,20 @@ function ShowErrorMessage(errorMessage)
       const file = fileInput.files[0]; // Arquivo PDF selecionado para envio
       formData.append("arquivo", file);
       formData.append("titulo", file.name);
-      file_name = file.name;
+      mensagens.push({fields: { texto: messageText, eh_do_usuario: true, documento: {titulo: file.name} }}); // Guarda mensagem do usuário com PDF
+    }
+    else
+    {
+      mensagens.push({fields: { texto: messageText, eh_do_usuario: true, documento: null }}); // Guarda mensagem do usuário se não houver PDF
     }
     formData.append("message", messageText)
-    mensagens.push({fields: { texto: messageText, eh_do_usuario: true, documento: {titulo: file_name, arquivo_url: null} }}); // Guarda mensagem do usuário
+    
+    DesattachFile.click(); // Desanexa o arquivo
 
-      sendBtn.disabled = true; //Desabilita botão de envio
+    sendBtn.disabled = true; //Desabilita botão de envio
 
       // Adiciona mensagem do usuário e salva
-      renderMessages(); // Exibe nova mensagem do usuário
+      renderLastMessage(); // Exibe nova mensagem do usuário
       startLoadingAnimation(); //Exibe animação de espera
 
       // ---------------------------------------------------------------
@@ -565,7 +595,7 @@ function ShowErrorMessage(errorMessage)
               renderConversationsSidebar();
             }
             mensagens.push({fields: { texto: data.message, eh_do_usuario: false }}); // Adiciona mensagem da IA
-            renderMessages(); // Mostra resposta da IA
+            renderLastMessage(); // Mostra resposta da IA
 
           } else {
             console.error("Erro ao salvar mensagem:", data.error);
@@ -579,7 +609,6 @@ function ShowErrorMessage(errorMessage)
           stopLoadingAnimation(); //Encerra animação
           isSending = false; 
           sendBtn.disabled = false; // Só reabilita aqui, no final do processo
-          DesattachFile.click(); // Desanexa o arquivo
         }
       }
     enviarMensagem(GetConversaID());

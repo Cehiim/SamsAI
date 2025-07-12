@@ -308,14 +308,37 @@ button:hover.profile-btn, a:hover.profile-btn {
   flex-direction: column;
 }
 
-#chat-input {
+.chat-input {
   display: flex;
   align-items: center;
   padding: 5px;
   background-color: #212121;
 }
 
-#chat-input input[type="text"] {
+#show-attached-file.chat-input{
+  display: none;
+  margin-left: 65px;
+  margin-right: auto;
+  background-color: #444;
+  border-radius: 4px;
+  
+}
+
+#show-attached-file.chat-input p{
+  margin-left: 5px;
+  margin-right: 5px;
+}
+
+#show-attached-file.chat-input #desattach-file{
+  margin-top: -25px;
+  cursor: pointer;
+}
+
+#desattach-file:hover{
+  color: #d4d2d2
+}
+
+.chat-input input[type="text"] {
   flex: 1;
   height: 100%;
   padding: 5px 8px;
@@ -327,7 +350,7 @@ button:hover.profile-btn, a:hover.profile-btn {
   font-size: 1.1em;
 }
 
-#chat-input input[type="text"]:focus {
+.chat-input input[type="text"]:focus {
   outline: 0 solid #444;
   height: 100%;
 }
@@ -375,6 +398,20 @@ button:hover.profile-btn, a:hover.profile-btn {
   align-self: flex-end;
   margin-left: auto;
   color: #000;
+}
+
+.message-file-attached{
+  background-color: #FFF;
+  border-radius: 4px;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.message-file-attached a{
+  color: #722F37;
+  margin-right: 10px;
 }
 
 .message.bot {
@@ -447,7 +484,7 @@ button:hover.profile-btn, a:hover.profile-btn {
   background-color: #722F37;
   padding: 20px;
   border: 1px solid #888;
-  width: 80%;
+  width: 60%;
   max-width: 400px;
   border-radius: 8px;
   color: #fff;
@@ -474,11 +511,15 @@ button:hover.profile-btn, a:hover.profile-btn {
   background-color: #D0D0D0;
 }
 
-#deleteConfirmBtn{
+.modal-actions .deleteConfirmBtn{
   background-color: #ff1717;
 }
 
-#deleteConfirmBtn:hover{
+.modal-actions .deleteConfirmBtn:hover{
+  background-color: #d71313;
+}
+
+.modal-actions .deleteConfirmBtn:hover{
   background-color: #d71313;
 }
 
@@ -568,7 +609,7 @@ body.light-theme .chat-header {
   background-color: #bbb;
 }
 
-body.light-theme #chat-input,
+body.light-theme .chat-input,
 body.light-theme .profile-dropdown,
 body.light-theme .modal-content {
   background-color: #ccc;
