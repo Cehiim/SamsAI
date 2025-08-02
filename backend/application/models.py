@@ -37,6 +37,7 @@ class Mensagem(models.Model):
         verbose_name_plural = "Mensagens"
 
 class Documento(models.Model):
+    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name="documentos")
     mensagem = models.OneToOneField(Mensagem, null=True, blank=True, on_delete=models.CASCADE, related_name="documento")
     titulo = models.CharField(max_length=100)
     arquivo = models.FileField(upload_to='upload')

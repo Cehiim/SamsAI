@@ -1,0 +1,8 @@
+{% extends 'base.html' %}
+{% load static %}
+  {% block content %}
+    <title>SamsAI | Erro 403</title>
+    <h3 class="title">Erro 403 - Acesso Negado</h3>
+    <p class="not_found_message">Você não possui permissão para acessar esse arquivo</p>
+    <a class="not_found" href="{% url 'login' %}">Voltar</a>
+  {% endblock %}

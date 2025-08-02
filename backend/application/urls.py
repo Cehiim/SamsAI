@@ -15,6 +15,7 @@ urlpatterns = [
     path('csrf', csrf_token_view, name='csrf'),
     path('api/conversas', GetConversasView.as_view(), name='get-conversas'),
     path('api/mensagens/<int:conversa_id>', GetMensagensView.as_view(), name='get-mensagens'),
+    path('show-pdf/<int:file_id>', ShowPDFView.as_view(), name='show-pdf'),
 ]
 
 if settings.DEBUG:

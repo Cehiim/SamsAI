@@ -1,19 +1,23 @@
+from certifi import contents
+from django.conf import settings
 from django.shortcuts import redirect, render
 from django.views import View
-from django.http import HttpResponse, HttpResponseRedirect, JsonResponse, Http404
+from django.http import FileResponse, HttpResponse, HttpResponseRedirect, JsonResponse, Http404
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse
 from django.contrib.auth import login, logout
 from .models import *
 from django.contrib.auth.hashers import check_password
 from django.contrib import messages
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError, PermissionDenied
 from django.core import serializers
 from django.views.decorators.csrf import ensure_csrf_cookie
+from decouple import config
 import json
 import openai
-from decouple import config
-from datetime import datetime
+import os
+
+
 
 @ensure_csrf_cookie
 def csrf_token_view(request): # Retorna CSRF_TOKEN para o front
@@ -321,6 +325,22 @@ class ChangePromptView(LoginRequiredMixin, View):
         except:
             return JsonResponse({"success": False, "error": "Erro na alteração do prompt"}, status=500)
 
+######################### View da Para Visualizar PDF ########################################
+class ShowPDFView(LoginRequiredMixin, View):
+    def get(self, request, file_id):
+        if not request.user.is_authenticated:
+            raise PermissionDenied("Você não possui permissão para visualizar este arquivo PDF. Faça login com sua conta e tente novamente")
+        
+        usuario_logado = Usuario.objects.get(pk=request.user.pk)
+        print(usuario_logado.documentos)
+
+        nome_arquivo = Documento.objects.get(pk=file_id)
+        caminho = os.path.join(settings.MEDIA_ROOT, "upload", nome_arquivo)
+        if os.path.exists(caminho):
+            return FileResponse(open(caminho, 'rb'), content_type='application/pdf')
+        else:
+            raise Http404("Arquivo não encontrado")
+        
 
             
             
