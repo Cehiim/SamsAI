@@ -13,6 +13,7 @@ from django.core.exceptions import ValidationError, PermissionDenied
 from django.core import serializers
 from django.views.decorators.csrf import ensure_csrf_cookie
 from decouple import config
+from django.core.files.storage.base import Storage
 import json
 import openai
 import os
@@ -125,7 +126,8 @@ class ChatBotView(LoginRequiredMixin, View):
 
             arquivo = request.FILES.get("arquivo")
             if arquivo: # Anexa arquivo a mensagem, se houver
-                documento = Documento.objects.create(titulo=str(arquivo), arquivo=arquivo, mensagem=nova_mensagem_usuario) # Salva arquivo
+                nome_valido = Storage().get_valid_name(str(arquivo))
+                documento = Documento.objects.create(titulo=nome_valido, arquivo=arquivo, mensagem=nova_mensagem_usuario, usuario=usuario) # Salva arquivo
             else:
                 documento = None
 
@@ -186,7 +188,8 @@ class NewChatBotView(LoginRequiredMixin, View):
 
             arquivo = request.FILES.get("arquivo")
             if arquivo: # Anexa arquivo a mensagem, se houver
-                documento = Documento.objects.create(titulo=str(arquivo), arquivo=arquivo, mensagem=nova_mensagem) # Salva arquivo
+                nome_valido = Storage().get_valid_name(str(arquivo))
+                documento = Documento.objects.create(titulo=nome_valido, arquivo=arquivo, mensagem=nova_mensagem, usuario=usuario) # Salva arquivo
             else:
                 documento = None
             
@@ -332,9 +335,16 @@ class ShowPDFView(LoginRequiredMixin, View):
             raise PermissionDenied("Você não possui permissão para visualizar este arquivo PDF. Faça login com sua conta e tente novamente")
         
         usuario_logado = Usuario.objects.get(pk=request.user.pk)
-        print(usuario_logado.documentos)
+        try:
+            documento = Documento.objects.get(pk=file_id)
+            nome_arquivo = documento.titulo
+            
+            if usuario_logado != documento.usuario:
+                raise PermissionDenied("Você não possui permissão para visualizar este arquivo PDF.")
+            
+        except:
+            raise Http404("Arquivo não encontrado")
 
-        nome_arquivo = Documento.objects.get(pk=file_id)
         caminho = os.path.join(settings.MEDIA_ROOT, "upload", nome_arquivo)
         if os.path.exists(caminho):
             return FileResponse(open(caminho, 'rb'), content_type='application/pdf')

@@ -16,4 +16,4 @@ class MensagemAdmin(admin.ModelAdmin):
 
 @admin.register(Documento)
 class DocumentoAdmin(admin.ModelAdmin):
-    list_display = ('pk', 'mensagem', 'titulo', 'data')
+    list_display = ('pk', 'usuario', 'mensagem', 'titulo', 'data')
