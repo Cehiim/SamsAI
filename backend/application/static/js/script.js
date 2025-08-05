@@ -44,7 +44,6 @@ document.addEventListener("DOMContentLoaded", function() {
       const response = await fetch(`/api/mensagens/${GetConversaID()}`);
       const data = await response.json();
       mensagens = data;
-
       // Renderiza as mensagens ao carregar a página
       renderMessages();
     }
@@ -409,6 +408,7 @@ document.addEventListener("DOMContentLoaded", function() {
   }
 
   function renderMessages() {
+    //console.log(mensagens)
     chatWindow.innerHTML = "";
     mensagens.forEach(msg => {
       const msgDiv = document.createElement("div"); //Cria uma nova div para guardar a mensagem

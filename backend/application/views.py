@@ -108,6 +108,7 @@ class ChatBotView(LoginRequiredMixin, View):
         context = {
             "usuario": usuario,
             "conversa_atual": conversa_atual,
+            "conversa_id": conversa_id,
             "prompt_instrucao": usuario.prompt_instrucao
         }
         return render(request, 'chat.html', context)
@@ -167,6 +168,7 @@ class NewChatBotView(LoginRequiredMixin, View):
 
         context = {
             "nome_usuario": usuario.username.title(), # Mostra nome do usuário com letra maiúscula
+            "conversa_id": None,
             "prompt_instrucao": usuario.prompt_instrucao
         }
         return render(request, "chat.html", context)
@@ -244,8 +246,8 @@ class GetMensagensView(LoginRequiredMixin, View):
     def get(self, request, conversa_id):
         try: # Envia para o front todas as mensagens de uma conversa especificada do usuário numa lista
             conversa_atual = Conversa.objects.get(pk=conversa_id)
-            queryset_mensagens = conversa_atual.mensagens.select_related('documento').all()
-
+            queryset_mensagens = conversa_atual.mensagens.all().order_by('data')
+            
             mensagens = []
             for m in queryset_mensagens:
                 mensagens.append({
