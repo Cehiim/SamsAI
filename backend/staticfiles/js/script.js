@@ -44,7 +44,6 @@ document.addEventListener("DOMContentLoaded", function() {
       const response = await fetch(`/api/mensagens/${GetConversaID()}`);
       const data = await response.json();
       mensagens = data;
-
       // Renderiza as mensagens ao carregar a página
       renderMessages();
     }
@@ -377,42 +376,61 @@ document.addEventListener("DOMContentLoaded", function() {
       .replace(/^_+|_+$/g, '')             // Remove underscores no começo/fim
   }
 
+  function createUserMessage(msgDiv, msg) 
+  {
+    msgDiv.classList.add("message", "user");
+        
+    if(msg.fields.documento !== null)
+    {
+      const AttachFileDiv = document.createElement("div");
+      const UserMsg = document.createElement("p");
+      AttachFileDiv.classList.add('message-file-attached')
+
+      let link;
+      console.log(msg.fields.documento.arquivo_url)
+      if (msg.fields.documento.arquivo_url !== undefined)
+        link = msg.fields.documento.arquivo_url;
+      else
+        link = `/media/upload/${slugify(msg.fields.documento.titulo)}`;
+
+      AttachFileDiv.innerHTML = `
+      <a href="${link}" target="_blank" alt="Documento PDF anexado"><i class="fa fa-file-pdf fa-3x"></i></a>
+      <p class="attached-file-name">${slugify(msg.fields.documento.titulo)}</p>
+      `;
+      UserMsg.textContent = msg.fields.texto;
+      msgDiv.appendChild(AttachFileDiv);
+      msgDiv.appendChild(UserMsg)
+    }
+    else
+    {
+      const content = msg.fields.texto;
+      msgDiv.textContent = content; //Adiciona conteúdo da mensagem do usuário
+    }  
+  }
+
+  function createBotMessage(msgDiv, msg)
+  {
+    msgDiv.classList.add("message", "bot"); //Se a mensagem é da IA, marca como do usuário (CSS aplica os estilos diferentes)
+    const content = marked.parse(msg.fields.texto); // Passa a mensagem de Markdown para HTML
+    msgDiv.innerHTML = content; //Coloca a mensagem na div
+  }
+
   function renderMessages() {
+    //console.log(mensagens)
     chatWindow.innerHTML = "";
-    console.log(mensagens)
     mensagens.forEach(msg => {
       const msgDiv = document.createElement("div"); //Cria uma nova div para guardar a mensagem
+      
+      if (msg.pk !== null)
+        msgDiv.setAttribute("message-id", msg.pk)
 
       if(msg.fields.eh_do_usuario) //Se a mensagem é do usuário, marca como do usuário (CSS aplica os estilos diferentes)
       {
-        msgDiv.classList.add("message", "user");
-        
-        if(msg.fields.documento !== null)
-        {
-          const AttachFileDiv = document.createElement("div");
-          const UserMsg = document.createElement("p");
-          AttachFileDiv.classList.add('message-file-attached')
-
-          AttachFileDiv.innerHTML = `
-          <a href="/media/upload/${slugify(msg.fields.documento.titulo)}" target="_blank" alt="Documento PDF anexado"><i class="fa fa-file-pdf fa-3x"></i></a>
-          <p class="attached-file-name">${slugify(msg.fields.documento.titulo)}</p>
-          `;
-
-          UserMsg.textContent = msg.fields.texto;
-          msgDiv.appendChild(AttachFileDiv);
-          msgDiv.appendChild(UserMsg)
-        }
-        else
-        {
-          const content = msg.fields.texto;
-          msgDiv.textContent = content; //Adiciona conteúdo da mensagem do usuário
-        }  
+        createUserMessage(msgDiv, msg);
       }
       else
       {
-        msgDiv.classList.add("message", "bot"); //Se a mensagem é da IA, marca como do usuário (CSS aplica os estilos diferentes)
-        const content = marked.parse(msg.fields.texto); // Passa a mensagem de Markdown para HTML
-        msgDiv.innerHTML = content; //Coloca a mensagem na div
+        createBotMessage(msgDiv, msg);
       }
       msgDiv.style.whiteSpace = "pre-line";
       chatWindow.appendChild(msgDiv);
@@ -425,35 +443,16 @@ document.addEventListener("DOMContentLoaded", function() {
   // ---------------------------------------------
 
   function renderLastMessage() {
-      const ultimaMensagem = mensagens[mensagens.length - 1];
 
       const msgDiv = document.createElement("div"); //Cria uma nova div para guardar a mensagem
       chatWindow.appendChild(msgDiv);
 
+      const ultimaMensagem = mensagens[mensagens.length - 1]
+
       if(ultimaMensagem.fields.eh_do_usuario) //Se a mensagem é do usuário, marca como do usuário (CSS aplica os estilos diferentes)
       {
-        msgDiv.classList.add("message", "user");
+        createUserMessage(msgDiv, ultimaMensagem);
         
-        if(ultimaMensagem.fields.documento !== null)
-        {
-          const AttachFileDiv = document.createElement("div");
-          const UserMsg = document.createElement("p");
-          AttachFileDiv.classList.add('message-file-attached')
-
-          AttachFileDiv.innerHTML = `
-          <a href="/media/upload/${slugify(ultimaMensagem.fields.documento.titulo)}" target="_blank" alt="Documento PDF anexado"><i class="fa fa-file-pdf fa-3x"></i></a>
-          <p class="attached-file-name">${slugify(ultimaMensagem.fields.documento.titulo)}</p>
-          `;
-
-          UserMsg.textContent = ultimaMensagem.fields.texto;
-          msgDiv.appendChild(AttachFileDiv);
-          msgDiv.appendChild(UserMsg)
-        }
-        else
-        {
-          const content = ultimaMensagem.fields.texto;
-          msgDiv.textContent = content; //Adiciona conteúdo da mensagem do usuário
-        }  
         const waitMessageDiv = document.createElement("div");
         waitMessageDiv.id = "wait-message"; //Cria div com animação de espera (animação feita no CSS)
         let dot = null; // Cria os três pontos
@@ -466,9 +465,7 @@ document.addEventListener("DOMContentLoaded", function() {
       }
       else
       {
-        msgDiv.classList.add("message", "bot"); //Se a mensagem é da IA, marca como do usuário (CSS aplica os estilos diferentes)
-        const content = marked.parse(ultimaMensagem.fields.texto); // Passa a mensagem de Markdown para HTML
-        msgDiv.innerHTML = content; //Coloca a mensagem na div
+        createBotMessage(msgDiv, ultimaMensagem);
       }
       msgDiv.style.whiteSpace = "pre-line";
       
@@ -578,7 +575,6 @@ function ShowErrorMessage(errorMessage)
     DesattachFile.click(); // Desanexa o arquivo
 
     sendBtn.disabled = true; //Desabilita botão de envio
-    console.log(messageText)
 
       // Adiciona mensagem do usuário e salva
       renderLastMessage(); // Exibe nova mensagem do usuário

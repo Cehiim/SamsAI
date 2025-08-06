@@ -281,6 +281,8 @@ button.profile-btn {
   cursor: pointer;
   text-decoration: none;
   font-size: 1em;
+  white-space: nowrap;
+  width: auto;
 }
 
 a.profile-btn {
@@ -404,13 +406,26 @@ button:hover.profile-btn, a:hover.profile-btn {
   background-color: #FFF;
   border-radius: 4px;
   padding: 10px;
+  margin-bottom: 10px;
   display: flex;
   align-items: center;
-  margin-bottom: 10px;
 }
 
-.message-file-attached a{
+.message-file-attached a {
   color: #722F37;
+  margin-right: 10px;
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+.message-file-attached a i{
+  color: #722F37;
+  margin-right: 10px;
+}
+
+.message-file-attached a p{
+  color: #000;
   margin-right: 10px;
 }
 
@@ -418,6 +433,10 @@ button:hover.profile-btn, a:hover.profile-btn {
   background-color: #722F37;
   align-self: flex-start;
   margin-right: auto;
+}
+
+.message.bot a {
+  color: #5CCFFF;
 }
 
 .message.bot > ol, ul{

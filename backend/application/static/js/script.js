@@ -82,6 +82,8 @@ document.addEventListener("DOMContentLoaded", function() {
   const ShowAttachedFile = document.getElementById('show-attached-file');
   const AttachedFileName = document.getElementById('attached-file-name');
 
+  const FilesListModal   = document.getElementById('filesListModal')
+
   const configForm    = document.getElementById("configForm");
   const PromptInput   = document.getElementById("prompt-input");
 
@@ -385,9 +387,20 @@ document.addEventListener("DOMContentLoaded", function() {
       const AttachFileDiv = document.createElement("div");
       const UserMsg = document.createElement("p");
       AttachFileDiv.classList.add('message-file-attached')
+
+      let link;
+      console.log(msg.fields.documento.arquivo_url)
+      if (msg.fields.documento.arquivo_url !== undefined)
+        link = msg.fields.documento.arquivo_url;
+      else
+        link = `/media/upload/${slugify(msg.fields.documento.titulo)}`;
+
       AttachFileDiv.innerHTML = `
-      <a href="/media/upload/${slugify(msg.fields.documento.titulo)}" target="_blank" alt="Documento PDF anexado"><i class="fa fa-file-pdf fa-3x"></i></a>
-      <p class="attached-file-name">${slugify(msg.fields.documento.titulo)}</p>
+      <a href="${link}" target="_blank" alt="Documento PDF anexado">
+        <i class="fa fa-file-pdf fa-3x"></i>
+        <p class="attached-file-name">${msg.fields.documento.titulo}</p>
+      </a>
+      
       `;
       UserMsg.textContent = msg.fields.texto;
       msgDiv.appendChild(AttachFileDiv);
@@ -412,6 +425,9 @@ document.addEventListener("DOMContentLoaded", function() {
     chatWindow.innerHTML = "";
     mensagens.forEach(msg => {
       const msgDiv = document.createElement("div"); //Cria uma nova div para guardar a mensagem
+      
+      if (msg.pk !== null)
+        msgDiv.setAttribute("message-id", msg.pk)
 
       if(msg.fields.eh_do_usuario) //Se a mensagem é do usuário, marca como do usuário (CSS aplica os estilos diferentes)
       {

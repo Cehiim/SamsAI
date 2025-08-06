@@ -104,12 +104,14 @@ class ChatBotView(LoginRequiredMixin, View):
             raise Http404("Conversa não encontrada")
         
         usuario = Usuario.objects.get(pk=request.user.pk) # Obtém usuário
+        documentos = Documento.objects.filter(usuario=usuario) # Obtém documentos do usuário
 
         context = {
             "usuario": usuario,
             "conversa_atual": conversa_atual,
             "conversa_id": conversa_id,
-            "prompt_instrucao": usuario.prompt_instrucao
+            "prompt_instrucao": usuario.prompt_instrucao,
+            "documentos": documentos
         }
         return render(request, 'chat.html', context)
     
@@ -165,11 +167,13 @@ class ChatBotView(LoginRequiredMixin, View):
 class NewChatBotView(LoginRequiredMixin, View):
     def get(self, request):
         usuario = Usuario.objects.get(pk=request.user.pk) # Obtém usuário
+        documentos = Documento.objects.filter(usuario=usuario) # Obtém documentos do usuário
 
         context = {
             "nome_usuario": usuario.username.title(), # Mostra nome do usuário com letra maiúscula
             "conversa_id": None,
-            "prompt_instrucao": usuario.prompt_instrucao
+            "prompt_instrucao": usuario.prompt_instrucao,
+            "documentos": documentos,
         }
         return render(request, "chat.html", context)
     
@@ -259,7 +263,7 @@ class GetMensagensView(LoginRequiredMixin, View):
                         'documento': {
                             'pk': m.documento.pk,
                             'titulo': m.documento.titulo,
-                            'arquivo_url': m.documento.arquivo.url
+                            'arquivo_url': f'/show-pdf/{m.documento.pk}'
                         } if hasattr(m, 'documento') and m.documento else None
                     } 
                 })
@@ -344,9 +348,15 @@ class ShowPDFView(LoginRequiredMixin, View):
             if usuario_logado != documento.usuario:
                 raise PermissionDenied("Você não possui permissão para visualizar este arquivo PDF.")
             
-        except:
-            raise Http404("Arquivo não encontrado")
-
+        except PermissionDenied:
+            raise PermissionDenied("Você não possui permissão para visualizar este arquivo PDF.")
+        
+        except Documento.DoesNotExist:
+            raise Http404("Este documento não existe")
+        
+        except Exception as e:
+            raise Http404("Este documento não existe")
+        
         caminho = os.path.join(settings.MEDIA_ROOT, "upload", nome_arquivo)
         if os.path.exists(caminho):
             return FileResponse(open(caminho, 'rb'), content_type='application/pdf')

@@ -38,6 +38,7 @@
           <div id="profileDropdown" class="profile-dropdown"> 
             <a id="logoutBtn" href="{% url 'logout' %}" class="profile-btn">Sair</a>
             <button id="configBtn" class="profile-btn">Configurações</button>
+            <button id="show-pdfBtn" class="profile-btn">Meus arquivos</button>
           </div>
         </div>
       </div>
@@ -58,7 +59,7 @@
       </div>
       <div class="chat-input">
         <button id="fileBtn" class="btn-file"><i class="fa fa-paperclip fa-2x"></i></button>
-        <input name="arquivo" type="file" id="fileInput" style="display: none;">
+        <input name="arquivo" accept="application/pdf" type="file" id="fileInput" style="display: none;">
         <input name="mensagem_usuario" type="text" autocomplete="off" id="messageInput" contenteditable="true" placeholder="Digite sua mensagem...">
         <button id="audioBtn" class="btn-audio"><i class="fa fa-microphone fa-2x"></i></button>
         <button id="sendBtn" class="btn-send">Enviar</button>
@@ -155,6 +156,28 @@
         </div>
         <button type="submit" class="config-save-btn">Salvar</button>
       </form>
+    </div>
+  </div>
+
+  <!-- Modal para visualização de arquivos PDF salvos -->
+  <div id="filesListModal" class="modal">
+    <div class="modal-content">
+      <div>
+        <span id="closeModal" class="close-button">
+          <i class="fa fa-xmark fa-2x"></i>
+        </span>
+        <h2>Arquivos PDF salvos</h2>
+      </div>
+      <div>
+        <ul>
+        {% for doc in documentos %}
+          <li>
+            <embed src="{{ doc.arquivo_url }}" type="application/pdf" width="100%" height="600px"/>
+            <p>{{ doc.titulo }}</p>
+          </li>
+        {% endfor %}
+        </ul>
+      </div>
     </div>
   </div>
   

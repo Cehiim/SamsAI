@@ -420,6 +420,10 @@ button:hover.profile-btn, a:hover.profile-btn {
   margin-right: auto;
 }
 
+.message.bot p a {
+  color: #FF8492 !important;
+}
+
 .message.bot > ol, ul{
   margin-left: 20px;
 }
