@@ -82,7 +82,9 @@ document.addEventListener("DOMContentLoaded", function() {
   const ShowAttachedFile = document.getElementById('show-attached-file');
   const AttachedFileName = document.getElementById('attached-file-name');
 
-  const FilesListModal   = document.getElementById('filesListModal')
+  const ShowPDFButton = document.getElementById('show-pdfBtn');
+  const FilesListModal   = document.getElementById('filesListModal');
+  const CloseFilesListModal = document.getElementById('closeFilesListModal');
 
   const configForm    = document.getElementById("configForm");
   const PromptInput   = document.getElementById("prompt-input");
@@ -365,6 +367,20 @@ document.addEventListener("DOMContentLoaded", function() {
     changePrompt();
   });
 
+  // ---------------------------------
+  // Modal com lista de PDFs salvos
+  // ---------------------------------
+  ShowPDFButton.addEventListener("click", (e) => {
+    FilesListModal.style.display = "flex";
+    profileDropdown.style.display = "none";
+    // TODO: Fazer mecanismo para apagar Arquivo PDF
+
+  });
+
+  CloseFilesListModal.addEventListener("click", (e) => {
+    FilesListModal.style.display = "none";
+  });
+
   // ------------------------------------------------
   // Função para renderizar as mensagens da conversa
   // ------------------------------------------------
@@ -389,14 +405,13 @@ document.addEventListener("DOMContentLoaded", function() {
       AttachFileDiv.classList.add('message-file-attached')
 
       let link;
-      console.log(msg.fields.documento.arquivo_url)
       if (msg.fields.documento.arquivo_url !== undefined)
         link = msg.fields.documento.arquivo_url;
       else
         link = `/media/upload/${slugify(msg.fields.documento.titulo)}`;
 
       AttachFileDiv.innerHTML = `
-      <a href="${link}" target="_blank" alt="Documento PDF anexado">
+      <a href="${link}/0" target="_blank" alt="Documento PDF anexado">
         <i class="fa fa-file-pdf fa-3x"></i>
         <p class="attached-file-name">${msg.fields.documento.titulo}</p>
       </a>

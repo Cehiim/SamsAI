@@ -283,6 +283,7 @@ button.profile-btn {
   font-size: 1em;
   white-space: nowrap;
   width: auto;
+  outline: none;
 }
 
 a.profile-btn {
@@ -610,6 +611,62 @@ button:hover.profile-btn, a:hover.profile-btn {
 
 .config-save-btn:hover {
   background-color: #D0D0D0;
+}
+
+/* Modal de Arquivos PDF salvos */
+.modal #filesListContent.modal-content{
+  max-width: 600px;
+}
+
+#FilesListHeader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#FilesListHeader h2{
+  margin: 0 auto 0 0;
+}
+
+#FilesListBody {
+  overflow-y: scroll;
+  max-height: 80vh;
+}
+
+#FilesListBody ul li{
+  list-style: none;
+  margin-bottom: 1.5em;
+  display: flex;
+  align-items: center;
+  gap: 1em;
+}
+
+#FilesListBody ul li iframe{
+  overflow: hidden !important;
+  display: block;
+  width: 20%;
+  height: auto;
+  border: none;
+}
+
+#FilesListBody ul li a{
+  color: #FFF;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 0.7em;
+}
+
+#FilesListBody ul li button{
+  color: #AAA;
+  background-color: #722F37;
+  border: none;
+  outline: none;
+  cursor: pointer;
+}
+
+#FilesListBody ul li button:hover{
+  color: #FFF;
 }
 
 /* ----------------------------------------------------

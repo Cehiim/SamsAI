@@ -14,6 +14,9 @@ from django.core import serializers
 from django.views.decorators.csrf import ensure_csrf_cookie
 from decouple import config
 from django.core.files.storage.base import Storage
+from django.views.decorators.clickjacking import xframe_options_exempt
+from PyPDF2 import PdfReader, PdfWriter
+from io import BytesIO
 import json
 import openai
 import os
@@ -105,13 +108,15 @@ class ChatBotView(LoginRequiredMixin, View):
         
         usuario = Usuario.objects.get(pk=request.user.pk) # Obtém usuário
         documentos = Documento.objects.filter(usuario=usuario) # Obtém documentos do usuário
+        num_documentos = len(documentos)
 
         context = {
             "usuario": usuario,
             "conversa_atual": conversa_atual,
             "conversa_id": conversa_id,
             "prompt_instrucao": usuario.prompt_instrucao,
-            "documentos": documentos
+            "documentos": documentos,
+            "num_documentos": num_documentos
         }
         return render(request, 'chat.html', context)
     
@@ -168,12 +173,14 @@ class NewChatBotView(LoginRequiredMixin, View):
     def get(self, request):
         usuario = Usuario.objects.get(pk=request.user.pk) # Obtém usuário
         documentos = Documento.objects.filter(usuario=usuario) # Obtém documentos do usuário
+        num_documentos = len(documentos)
 
         context = {
             "nome_usuario": usuario.username.title(), # Mostra nome do usuário com letra maiúscula
             "conversa_id": None,
             "prompt_instrucao": usuario.prompt_instrucao,
             "documentos": documentos,
+            "num_documentos": num_documentos
         }
         return render(request, "chat.html", context)
     
@@ -336,7 +343,9 @@ class ChangePromptView(LoginRequiredMixin, View):
 
 ######################### View da Para Visualizar PDF ########################################
 class ShowPDFView(LoginRequiredMixin, View):
-    def get(self, request, file_id):
+
+    @xframe_options_exempt
+    def get(self, request, file_id, is_inModal):
         if not request.user.is_authenticated:
             raise PermissionDenied("Você não possui permissão para visualizar este arquivo PDF. Faça login com sua conta e tente novamente")
         
@@ -344,7 +353,7 @@ class ShowPDFView(LoginRequiredMixin, View):
         try:
             documento = Documento.objects.get(pk=file_id)
             nome_arquivo = documento.titulo
-            
+
             if usuario_logado != documento.usuario:
                 raise PermissionDenied("Você não possui permissão para visualizar este arquivo PDF.")
             
@@ -359,11 +368,27 @@ class ShowPDFView(LoginRequiredMixin, View):
         
         caminho = os.path.join(settings.MEDIA_ROOT, "upload", nome_arquivo)
         if os.path.exists(caminho):
-            return FileResponse(open(caminho, 'rb'), content_type='application/pdf')
+            # Se o PDF está sendo exibido no Modal, carrega apenas a primeira página
+            if is_inModal == 1:
+                reader = PdfReader(caminho)
+                writer = PdfWriter()
+                writer.add_page(reader.pages[0])
+                output = BytesIO()
+                writer.write(output)
+                output.seek(0)
+                return FileResponse(output, content_type='application/pdf')
+            
+            # Se o PDF está sendo exibido
+            else:
+                return FileResponse(open(caminho, 'rb'), content_type='application/pdf')
+                
         else:
             raise Http404("Arquivo não encontrado")
         
-
-            
+######################### View da Para Deletar PDF ########################################
+class DeletePDFView(LoginRequiredMixin, View):
+    def post(self, request, file_id):
+        pass
+        # TODO: Fazer mecanismo para apagar Arquivo PDF
             
     
