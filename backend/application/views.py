@@ -115,8 +115,6 @@ class ChatBotView(LoginRequiredMixin, View):
             "conversa_atual": conversa_atual,
             "conversa_id": conversa_id,
             "prompt_instrucao": usuario.prompt_instrucao,
-            "documentos": documentos,
-            "num_documentos": num_documentos
         }
         return render(request, 'chat.html', context)
     
@@ -179,8 +177,6 @@ class NewChatBotView(LoginRequiredMixin, View):
             "nome_usuario": usuario.username.title(), # Mostra nome do usuário com letra maiúscula
             "conversa_id": None,
             "prompt_instrucao": usuario.prompt_instrucao,
-            "documentos": documentos,
-            "num_documentos": num_documentos
         }
         return render(request, "chat.html", context)
     
@@ -243,7 +239,7 @@ class NewChatBotView(LoginRequiredMixin, View):
 ######################### View da API para obter a lista de conversas ########################################
 class GetConversasView(LoginRequiredMixin, View):
     def get(self, request):
-        try: # Envia para o front todas as conversas do usuário numa lista, começando pelas mais recente, para compor a conversation sidebar no front
+        try: # Envia para o front todas as conversas do usuário numa lista, começando pelas mais recentes, para compor a conversation sidebar no front
             usuario = Usuario.objects.get(pk=request.user.pk) 
             queryset_conversas = Conversa.objects.filter(usuario=usuario).order_by('-data')
             todas_as_conversas = serializers.serialize('json', queryset_conversas)
@@ -279,6 +275,18 @@ class GetMensagensView(LoginRequiredMixin, View):
         
         except:
             return JsonResponse({"success": False, "error": f'Erro na obtenção das mensagens da conversa de código: {conversa_id}'})
+        
+######################### View da API para obter a lista de arquivos PDFs de um usuário ########################################
+class GetDocumentosView(LoginRequiredMixin, View):    
+    def get(self, request):
+        try: # Envia para o front todos os arquivos PDF do usuário numa lista, começando pelos mais recentes
+            usuario = Usuario.objects.get(pk=request.user.pk) 
+            queryset_documentos = Documento.objects.filter(usuario=usuario).order_by('-data')
+            todos_os_documentos = serializers.serialize('json', queryset_documentos)
+            return JsonResponse(todos_os_documentos, safe=False)
+        
+        except:
+            return JsonResponse({"success": False, "error": 'Erro na obtenção das conversas'})
 
 ######################### View da API para renomear uma conversa ########################################            
 class RenameView(LoginRequiredMixin, View):
@@ -345,7 +353,7 @@ class ChangePromptView(LoginRequiredMixin, View):
 class ShowPDFView(LoginRequiredMixin, View):
 
     @xframe_options_exempt
-    def get(self, request, file_id, is_inModal):
+    def get(self, request, file_id):
         if not request.user.is_authenticated:
             raise PermissionDenied("Você não possui permissão para visualizar este arquivo PDF. Faça login com sua conta e tente novamente")
         
@@ -369,7 +377,13 @@ class ShowPDFView(LoginRequiredMixin, View):
         caminho = os.path.join(settings.MEDIA_ROOT, "upload", nome_arquivo)
         if os.path.exists(caminho):
             # Se o PDF está sendo exibido no Modal, carrega apenas a primeira página
-            if is_inModal == 1:
+            if "is_modal" in request.GET:
+                is_modal_str = request.GET["is_modal"]
+                is_modal = True if is_modal_str == "true" else False
+            else:
+                is_modal = False
+
+            if is_modal:
                 reader = PdfReader(caminho)
                 writer = PdfWriter()
                 writer.add_page(reader.pages[0])
@@ -388,7 +402,29 @@ class ShowPDFView(LoginRequiredMixin, View):
 ######################### View da Para Deletar PDF ########################################
 class DeletePDFView(LoginRequiredMixin, View):
     def post(self, request, file_id):
-        pass
-        # TODO: Fazer mecanismo para apagar Arquivo PDF
+        if not request.user.is_authenticated:
+            raise PermissionDenied("Você não possui permissão para apagar este arquivo PDF. Faça login com sua conta e tente novamente")
+        
+        try:
+            usuario = Usuario.objects.get(pk=request.user.pk)
+            documento = Documento.objects.get(pk=file_id)
+
+            if documento.usuario != usuario:
+                raise PermissionDenied("Você não possui permissão para apagar este arquivo PDF.")
             
-    
+            nome_documento = documento.titulo
+            documento.delete()
+            return JsonResponse({"success": True, "message": f"Documento '{nome_documento}' deletado com sucesso!"}, status=200)
+        
+        except PermissionDenied:
+            raise PermissionDenied("Você não possui permissão para apagar este arquivo PDF.")
+
+        except Documento.DoesNotExist:
+            return JsonResponse({"success": False, "error": f"Documento '{nome_documento}' não encontrado"}, status=404)
+        
+        except Exception as e:
+            return JsonResponse({"success": False, "error": str(e)}, status=500)
+        
+        except:
+            return JsonResponse({"success": False, "error": "Método não permitido"}, status=405)
+        

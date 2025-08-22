@@ -26,7 +26,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
     // Renderiza a lista de conversas ao carregar a página
     renderConversationsSidebar();
-
+      
     if(GetConversaID() != "new") //Atualiza currentConversation com o valor da conversa atual
       currentConversation = conversations.find(conv => String(conv.pk) === String(GetConversaID()));
     }
@@ -35,7 +35,6 @@ document.addEventListener("DOMContentLoaded", function() {
     }
   }
   loadConversations();
-  
 
   let mensagens = JSON.parse('[]'); //Lista de mensagens da conversa
   if(GetConversaID() != "new") //Se a conversa não for nova, obtém as mensagens
@@ -49,7 +48,21 @@ document.addEventListener("DOMContentLoaded", function() {
     }
     loadMessages();
   }
-  
+
+  let documents = null;
+
+  // Obtém a lista de documentos do usuário
+  async function loadFiles() {
+    try{
+      const response = await fetch('/api/documentos');
+      const data = await response.json();
+      documents = JSON.parse(data);
+    }
+    catch(error) {
+      console.error("Erro ao buscar conversas:", error);
+    }
+  }
+  loadFiles();
   
   // ---------------------------
   // Seleção dos elementos do DOM
@@ -85,6 +98,8 @@ document.addEventListener("DOMContentLoaded", function() {
   const ShowPDFButton = document.getElementById('show-pdfBtn');
   const FilesListModal   = document.getElementById('filesListModal');
   const CloseFilesListModal = document.getElementById('closeFilesListModal');
+
+  const FilesListBody = document.getElementById('FilesListBody');
 
   const configForm    = document.getElementById("configForm");
   const PromptInput   = document.getElementById("prompt-input");
@@ -279,7 +294,6 @@ document.addEventListener("DOMContentLoaded", function() {
         "Content-Type": "application/json",
         "X-CSRFToken": CSRF_TOKEN, // Capturar o CSRF Token do Django
       },
-      body: JSON.stringify({ key: GetConversaID() }),
     })
     .then(response => response.json())
     .then(data => {
@@ -370,9 +384,51 @@ document.addEventListener("DOMContentLoaded", function() {
   // ---------------------------------
   // Modal com lista de PDFs salvos
   // ---------------------------------
+
+  function renderFilesList()
+  {
+    FilesListBody.innerHTML =  "";
+
+    if (documents.length === 0)
+    {
+      FilesListBody.innerHTML = `<h4>Ainda não foi salvo nenhum arquivo</h4>`
+    }
+    else
+    {
+      const List = document.createElement("ul");
+      FilesListBody.appendChild(List)
+
+      documents.forEach(doc => {
+        const Item = document.createElement("li");
+        Item.innerHTML = `
+        <iframe src="/show-pdf/${ doc.pk }?is_modal=true"></iframe>
+        <a href="/show-pdf/${ doc.pk }?is_modal=false" target="_blank">
+          <h3>${ doc.fields.titulo }</h3>
+          <i class="fa fa-arrow-up-right-from-square fa-2x"></i>
+        </a>
+        `;
+        const DeleteFileButton = document.createElement("button");
+        DeleteFileButton.id = `doc-${ doc.pk }`;
+        DeleteFileButton.className = "document-delete-buttons";
+        DeleteFileButton.name = `${ doc.fields.titulo }`;
+        DeleteFileButton.innerHTML = `<i class="fa fa-trash-can fa-2x"></i>`;
+        
+        Item.appendChild(DeleteFileButton);
+        List.appendChild(Item);
+
+        DeleteFileButton.addEventListener("click", (ev) => {
+          ev.stopPropagation();
+          showDeleteFileModal(doc.pk, doc.fields.titulo);
+        });
+
+      });
+    }
+  }
+
   ShowPDFButton.addEventListener("click", (e) => {
     FilesListModal.style.display = "flex";
     profileDropdown.style.display = "none";
+    renderFilesList();
     // TODO: Fazer mecanismo para apagar Arquivo PDF
 
   });
@@ -380,6 +436,46 @@ document.addEventListener("DOMContentLoaded", function() {
   CloseFilesListModal.addEventListener("click", (e) => {
     FilesListModal.style.display = "none";
   });
+
+  //Modal para exclusão de arquivos PDF do 
+  function showDeleteFileModal(doc_id, doc_name)
+  {
+    const DeleteFileModal = document.getElementById("deleteFileModal");
+    const DeleteFileModalBody = document.getElementById("deleteFileModalBody");
+    const DeleteFileCancelBtn = document.getElementById("deleteFileCancelBtn");
+    const DeleteFileConfirmBtn = document.getElementById("deleteFileConfirmBtn");
+
+    DeleteFileModal.style.display = "flex";
+    DeleteFileModalBody.textContent = `Deseja mesmo apagar o arquivo "${doc_name}"?`
+
+    DeleteFileCancelBtn.addEventListener("click", () => {
+      DeleteFileModal.style.display = "none"
+    });
+
+    DeleteFileConfirmBtn.addEventListener("click", () => {
+      DeleteFileModal.style.display = "none";
+      documents = documents.filter(doc => doc.pk !== doc_id);
+
+    // -------------------------------------------------------------------------
+    // Enviar atualização para deletar conversa no back-end via Fetch API (AJAX)
+    // -------------------------------------------------------------------------
+    fetch(`/delete-pdf/${doc_id}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": CSRF_TOKEN, // Capturar o CSRF Token do Django
+      },
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        console.log(data.message);
+        renderFilesList();
+      }
+    })
+    .catch(error => console.error("Erro na requisição:", error));
+    });
+  }
 
   // ------------------------------------------------
   // Função para renderizar as mensagens da conversa
@@ -411,7 +507,7 @@ document.addEventListener("DOMContentLoaded", function() {
         link = `/media/upload/${slugify(msg.fields.documento.titulo)}`;
 
       AttachFileDiv.innerHTML = `
-      <a href="${link}/0" target="_blank" alt="Documento PDF anexado">
+      <a href="${link}" target="_blank" alt="Documento PDF anexado">
         <i class="fa fa-file-pdf fa-3x"></i>
         <p class="attached-file-name">${msg.fields.documento.titulo}</p>
       </a>

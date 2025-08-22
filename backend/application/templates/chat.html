@@ -169,24 +169,7 @@
         </span>
       </div>
       <div id="FilesListBody">
-        {% if num_documentos > 0 %}
-          <ul>
-          {% for doc in documentos %}
-            <li>
-                <iframe src="{% url 'show-pdf' doc.pk 1 %}"></iframe>
-                <a href="{% url 'show-pdf' doc.pk 1 %}" target="_blank">
-                  <h3>{{ doc.titulo }}</h3>
-                  <i class="fa fa-arrow-up-right-from-square fa-2x"></i>
-                </a>
-                <button>
-                  <i class="fa fa-trash-can fa-2x"></i>
-                </button>
-            </li>
-          {% endfor %}
-          </ul>
-        {% else %}
-          <h4>Ainda não foi salvo nenhum arquivo</h4>
-        {% endif %}
+        <!-- Lista de documentos renderizada dinâmicamente pelo Javascript -->
       </div>
     </div>
   </div>
@@ -198,7 +181,7 @@
       <p id="deleteFileModalBody"></p>
       <div class="modal-actions">
         <button id="deleteFileCancelBtn">Cancelar</button>
-        <button id="deleteFileConfirmBtn" class="deleteFileConfirmBtn">Apagar</button>
+        <button id="deleteFileConfirmBtn" class="deleteConfirmBtn">Apagar</button>
       </div>
     </div>
   </div>
