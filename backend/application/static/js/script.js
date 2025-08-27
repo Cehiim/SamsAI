@@ -110,6 +110,9 @@ document.addEventListener("DOMContentLoaded", function() {
   // Variável global para obter URL do arquivo na pré-visualização (antes de enviar pro back)
   let fileURL = ""; 
 
+  //Variável global para conferir se há um arquivo anexado à mensagem
+  let has_file = false;
+
   // ---------------------------
   // Funções auxiliares
   // ---------------------------
@@ -673,7 +676,7 @@ function ShowErrorMessage(errorMessage)
     const formData = new FormData();
 
     //Obtém arquivo PDF anexado
-    if(fileInput.files.length > 0)
+    if(has_file)
     {
       const file = fileInput.files[0]; // Arquivo PDF selecionado para envio
       formData.append("arquivo", file);
@@ -720,7 +723,13 @@ function ShowErrorMessage(errorMessage)
               renderConversationsSidebar();
             }
             mensagens.push({fields: { texto: data.message, eh_do_usuario: false }}); // Adiciona mensagem da IA
-            renderLastMessage(); // Mostra resposta da IA
+
+            if (has_file) { // Se há um arquivo PDF anexado, recarrega todas as mensagens da conversa para exibir o caminho do PDF correto
+              mensagens[mensagens.length - 2].fields.documento.arquivo_url = `/show-pdf/${data.documento_id}`;
+              renderMessages();
+            } else {
+              renderLastMessage(); // Mostra resposta da IA
+            }
 
           } else {
             console.error("Erro ao salvar mensagem:", data.error);
@@ -734,6 +743,7 @@ function ShowErrorMessage(errorMessage)
           stopLoadingAnimation(); //Encerra animação
           isSending = false; 
           sendBtn.disabled = false; // Só reabilita aqui, no final do processo
+          has_file = false;
         }
       }
     enviarMensagem(GetConversaID());
@@ -811,6 +821,7 @@ function ShowErrorMessage(errorMessage)
     ViewFile.innerHTML = "";
     ShowAttachedFile.style.display = "flex";
 
+    has_file = true;
     const file = fileInput.files[0];
     AttachedFileName.textContent = file.name;
   });

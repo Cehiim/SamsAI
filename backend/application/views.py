@@ -187,7 +187,7 @@ class ChatBotView(LoginRequiredMixin, View):
             nova_mensagem_IA = Mensagem(conversa=conversa_atual, texto=mensagem_IA, eh_do_usuario=False) #Salva resposta da IA
             nova_mensagem_IA.save()
 
-            return JsonResponse({"success": True, "message": mensagem_IA}, status=200) # Envia mensagem da IA para o front
+            return JsonResponse({"success": True, "message": mensagem_IA, "documento_id": documento.pk}, status=200) # Envia mensagem da IA para o front
         
         except Conversa.DoesNotExist:
             return JsonResponse({"success": False, "error": "Conversa não encontrada"}, status=404)
