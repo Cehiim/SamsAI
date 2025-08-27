@@ -1,4 +1,4 @@
-from certifi import contents
+from __future__ import print_function
 from django.conf import settings
 from django.shortcuts import redirect, render
 from django.views import View
@@ -17,6 +17,10 @@ from django.core.files.storage.base import Storage
 from django.views.decorators.clickjacking import xframe_options_exempt
 from PyPDF2 import PdfReader, PdfWriter
 from io import BytesIO
+import time
+import cloudmersive_convert_api_client
+from cloudmersive_convert_api_client.rest import ApiException
+from pprint import pprint
 import json
 import openai
 import os
@@ -107,8 +111,6 @@ class ChatBotView(LoginRequiredMixin, View):
             raise Http404("Conversa não encontrada")
         
         usuario = Usuario.objects.get(pk=request.user.pk) # Obtém usuário
-        documentos = Documento.objects.filter(usuario=usuario) # Obtém documentos do usuário
-        num_documentos = len(documentos)
 
         context = {
             "usuario": usuario,
@@ -118,7 +120,9 @@ class ChatBotView(LoginRequiredMixin, View):
         }
         return render(request, 'chat.html', context)
     
-    def post(self, request, conversa_id):     
+    def post(self, request, conversa_id):
+        conteudo_PDF = ""
+
         try:
             conteudo_mensagem_usuario = request.POST["message"] # obtém requisição AJAX do front com a pergunta do usuário
             conversa_atual = Conversa.objects.get(pk=conversa_id) # Obtém conversa atual
@@ -134,11 +138,39 @@ class ChatBotView(LoginRequiredMixin, View):
             if arquivo: # Anexa arquivo a mensagem, se houver
                 nome_valido = Storage().get_valid_name(str(arquivo))
                 documento = Documento.objects.create(titulo=nome_valido, arquivo=arquivo, mensagem=nova_mensagem_usuario, usuario=usuario) # Salva arquivo
+
+                # ------------------------------------------------------
+                # Faz uma requisição para a API para obter string do PDF
+                # ------------------------------------------------------
+                # Configure API key authorization: Apikey
+                configuration = cloudmersive_convert_api_client.Configuration()
+                configuration.api_key['Apikey'] = config('CLOUDMERSIVE_API_KEY')
+                # Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+                # configuration.api_key_prefix['Apikey'] = 'Bearer'
+
+                # create an instance of the API class
+                api_instance = cloudmersive_convert_api_client.ConvertDocumentApi(cloudmersive_convert_api_client.ApiClient(configuration))
+                input_file = os.path.join(settings.MEDIA_ROOT, "upload", documento.titulo) # file | Input file to perform the operation on.
+                text_formatting_mode = 'preserveWhitespace' # str | Optional; specify how whitespace should be handled when converting PDF to text.  Possible values are 'preserveWhitespace' which will attempt to preserve whitespace in the document and relative positioning of text within the document, and 'minimizeWhitespace' which will not insert additional spaces into the document in most cases.  Default is 'preserveWhitespace'. (optional)
+
+                try:
+                    # Convert PDF Document to Text (txt)
+                    api_response = api_instance.convert_document_pdf_to_txt(input_file, text_formatting_mode=text_formatting_mode)
+
+                    if api_response.successful:
+                        conteudo_PDF = "Conteúdo do PDF anexado à mensagem: " + api_response.text_result
+
+                except ApiException as e:
+                    print("Exception when calling ConvertDocumentApi->convert_document_pdf_to_txt: %s\n" % e)
+
             else:
                 documento = None
 
-            client = openai.OpenAI( # Faz uma requisição para a API da IA
-                api_key=config('API_KEY'),
+            # -----------------------------------
+            # Faz uma requisição para a API da IA
+            # -----------------------------------
+            client = openai.OpenAI(
+                api_key=config('LLM_API_KEY'),
                 base_url="https://chat.maritaca.ai/api"
             )
 
@@ -146,7 +178,7 @@ class ChatBotView(LoginRequiredMixin, View):
               model="sabia-3",
               messages=[
                 {"role": "system", "content": usuario.prompt_instrucao},
-                {"role": "user", "content": conteudo_mensagem_usuario},
+                {"role": "user", "content": conteudo_mensagem_usuario + conteudo_PDF},
               ],
               max_tokens=8000
             )
@@ -170,8 +202,6 @@ class ChatBotView(LoginRequiredMixin, View):
 class NewChatBotView(LoginRequiredMixin, View):
     def get(self, request):
         usuario = Usuario.objects.get(pk=request.user.pk) # Obtém usuário
-        documentos = Documento.objects.filter(usuario=usuario) # Obtém documentos do usuário
-        num_documentos = len(documentos)
 
         context = {
             "nome_usuario": usuario.username.title(), # Mostra nome do usuário com letra maiúscula
@@ -181,6 +211,8 @@ class NewChatBotView(LoginRequiredMixin, View):
         return render(request, "chat.html", context)
     
     def post(self, request):
+        conteudo_PDF = ""
+
         usuario = Usuario.objects.get(pk=request.user.pk) # Obtém usuário
         conteudo_mensagem_usuario = request.POST["message"] #extrai conteúdo da mensagem 
 
@@ -199,11 +231,39 @@ class NewChatBotView(LoginRequiredMixin, View):
             if arquivo: # Anexa arquivo a mensagem, se houver
                 nome_valido = Storage().get_valid_name(str(arquivo))
                 documento = Documento.objects.create(titulo=nome_valido, arquivo=arquivo, mensagem=nova_mensagem, usuario=usuario) # Salva arquivo
+
+                # ------------------------------------------------------
+                # Faz uma requisição para a API para obter string do PDF
+                # ------------------------------------------------------
+                # Configure API key authorization: Apikey
+                configuration = cloudmersive_convert_api_client.Configuration()
+                configuration.api_key['Apikey'] = config('CLOUDMERSIVE_API_KEY')
+                # Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+                # configuration.api_key_prefix['Apikey'] = 'Bearer'
+
+                # create an instance of the API class
+                api_instance = cloudmersive_convert_api_client.ConvertDocumentApi(cloudmersive_convert_api_client.ApiClient(configuration))
+                input_file = os.path.join(settings.MEDIA_ROOT, "upload", documento.titulo) # file | Input file to perform the operation on.
+                text_formatting_mode = 'preserveWhitespace' # str | Optional; specify how whitespace should be handled when converting PDF to text.  Possible values are 'preserveWhitespace' which will attempt to preserve whitespace in the document and relative positioning of text within the document, and 'minimizeWhitespace' which will not insert additional spaces into the document in most cases.  Default is 'preserveWhitespace'. (optional)
+
+                try:
+                    # Convert PDF Document to Text (txt)
+                    api_response = api_instance.convert_document_pdf_to_txt(input_file, text_formatting_mode=text_formatting_mode)
+
+                    if api_response.successful:
+                        conteudo_PDF = "Conteúdo do PDF anexado à mensagem: " + api_response.text_result
+
+                except ApiException as e:
+                    print("Exception when calling ConvertDocumentApi->convert_document_pdf_to_txt: %s\n" % e)
+
             else:
                 documento = None
-            
+
+            # -----------------------------------
+            # Faz uma requisição para a API da IA
+            # -----------------------------------            
             client = openai.OpenAI( # Faz uma requisição para a API da IA
-                api_key=config('API_KEY'),
+                api_key=config('LLM_API_KEY'),
                 base_url="https://chat.maritaca.ai/api"
             )
 
@@ -211,7 +271,7 @@ class NewChatBotView(LoginRequiredMixin, View):
               model="sabia-3",
               messages=[
                 {"role": "system", "content": usuario.prompt_instrucao},
-                {"role": "user", "content": conteudo_mensagem_usuario},
+                {"role": "user", "content": conteudo_mensagem_usuario + conteudo_PDF},
               ],
               max_tokens=8000
             )

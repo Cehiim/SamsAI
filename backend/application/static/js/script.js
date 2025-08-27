@@ -429,8 +429,6 @@ document.addEventListener("DOMContentLoaded", function() {
     FilesListModal.style.display = "flex";
     profileDropdown.style.display = "none";
     renderFilesList();
-    // TODO: Fazer mecanismo para apagar Arquivo PDF
-
   });
 
   CloseFilesListModal.addEventListener("click", (e) => {
