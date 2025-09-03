@@ -724,7 +724,8 @@ function ShowErrorMessage(errorMessage)
             mensagens.push({fields: { texto: data.message, eh_do_usuario: false }}); // Adiciona mensagem da IA
 
             if (has_file) { // Se há um arquivo PDF anexado, recarrega todas as mensagens da conversa para exibir o caminho do PDF correto
-              mensagens[mensagens.length - 2].fields.documento.arquivo_url = `/show-pdf/${data.documento_id}`;
+              mensagens[mensagens.length - 2].fields.documento.arquivo_url = `/show-pdf/${data.documento.pk}`;
+              //console.log(data)
               renderMessages();
             } else {
               renderLastMessage(); // Mostra resposta da IA

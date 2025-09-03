@@ -99,37 +99,58 @@ class CadastroView(View):
             messages.error(request, "Não foi possível realizar o cadastro. Verifique os dados e tente novamente")
             return render(request, "cadastro.html")
 
-########################## View da página de Conversa (Chat) com conversa já existente ########################################
+########################## View da página de Conversa (Chat) ########################################
 class ChatBotView(LoginRequiredMixin, View):
-    def get(self, request, conversa_id):
-        try:    
-            conversa_atual = Conversa.objects.get(pk=conversa_id) #Obtém conversa atual
-            if conversa_atual.usuario != request.user: # Se a conversa não pertencer ao usuário, exibe página de erro 404
-                raise Http404("Conversa não encontrada")
-            
-        except Conversa.DoesNotExist: # Se a conversa não existir, exibe página de erro 404
-            raise Http404("Conversa não encontrada")
-        
+    def get(self, request, conversa_id=None):
         usuario = Usuario.objects.get(pk=request.user.pk) # Obtém usuário
 
         context = {
-            "usuario": usuario,
-            "conversa_atual": conversa_atual,
-            "conversa_id": conversa_id,
-            "prompt_instrucao": usuario.prompt_instrucao,
-        }
+                "conversa_id": conversa_id,
+                "prompt_instrucao": usuario.prompt_instrucao,
+            }
+        # Conversa já existente
+        if conversa_id:
+            try:    
+                conversa_atual = Conversa.objects.get(pk=conversa_id) #Obtém conversa atual
+                if conversa_atual.usuario != request.user: # Se a conversa não pertencer ao usuário, exibe página de erro 404
+                    raise Http404("Conversa não encontrada")
+            
+            except Conversa.DoesNotExist: # Se a conversa não existir, exibe página de erro 404
+                raise Http404("Conversa não encontrada")
+            
+            context["conversa_atual"] = conversa_atual
+
+        # Nova Conversa
+        else:
+            context["nome_usuario"] = usuario.username.title()
+            
         return render(request, 'chat.html', context)
     
-    def post(self, request, conversa_id):
+    def post(self, request, conversa_id=None):
         conteudo_PDF = ""
 
         try:
             conteudo_mensagem_usuario = request.POST["message"] # obtém requisição AJAX do front com a pergunta do usuário
-            conversa_atual = Conversa.objects.get(pk=conversa_id) # Obtém conversa atual
             usuario = Usuario.objects.get(pk=request.user.pk) # Obtém usuário
 
-            if conversa_atual.usuario != request.user: # Se a conversa atual não pertencer ao usuário, retorna Erro
-                return JsonResponse({"success": False, "error": "Conversa não encontrada"}, status=404)
+            # Conversa já existente
+            if conversa_id:
+                conversa_atual = Conversa.objects.get(pk=conversa_id) # Obtém conversa atual
+                if conversa_atual.usuario != request.user: # Se a conversa atual não pertencer ao usuário, retorna Erro
+                    return JsonResponse({"success": False, "error": "Conversa não encontrada"}, status=404)
+                
+            # Nova conversa
+            else: # Cria um nome para a conversa a partir dos primeiros caracteres da mensagem
+                if len(conteudo_mensagem_usuario) > 20:
+                    nome_conversa = conteudo_mensagem_usuario[:20] + "..."
+                
+                elif len(conteudo_mensagem_usuario) <= 20 and len(conteudo_mensagem_usuario) >= 1:
+                    nome_conversa = conteudo_mensagem_usuario
+                else:
+                    return JsonResponse({"success": False, "error": "Mensagem inválida"})
+            
+                conversa_atual = Conversa(usuario=usuario, nome=nome_conversa) #Cria nova conversa
+                conversa_atual.save()
 
             nova_mensagem_usuario = Mensagem(conversa=conversa_atual, texto=conteudo_mensagem_usuario) #Cria nova mensagem
             nova_mensagem_usuario.save()
@@ -186,12 +207,32 @@ class ChatBotView(LoginRequiredMixin, View):
 
             nova_mensagem_IA = Mensagem(conversa=conversa_atual, texto=mensagem_IA, eh_do_usuario=False) #Salva resposta da IA
             nova_mensagem_IA.save()
+            
+            # Nova conversa
+            if conversa_id:
+                return JsonResponse({
+                    "success": True, 
+                    "message": mensagem_IA, 
+                    "documento":{
+                        "pk": documento.pk, 
+                        "titulo": documento.titulo
+                    } if documento else None
+                }, status=200) # Envia mensagem da IA para o front
 
-            if arquivo:
-                return JsonResponse({"success": True, "message": mensagem_IA, "documento_id": documento.pk}, status=200) # Envia mensagem da IA para o front
             else:
-                return JsonResponse({"success": True, "message": mensagem_IA}, status=200) # Envia mensagem da IA para o front
-        
+                redirect_url = reverse('chat', args=[conversa_atual.pk]) # Envia mensagem da IA para o front junto com o nome da nova conversa, ID e URL
+                return JsonResponse({
+                    'success': True, 
+                    'message': mensagem_IA, 
+                    'nome_da_nova_conversa': nome_conversa, 
+                    'nova_conversa_id': conversa_atual.pk, 
+                    'redirect': redirect_url,
+                    'documento': {
+                        'pk': documento.pk,
+                        'titulo': documento.titulo,
+                    } if documento else None
+                }, status=200)
+                
         except Conversa.DoesNotExist:
             return JsonResponse({"success": False, "error": "Conversa não encontrada"}, status=404)
         
@@ -200,104 +241,6 @@ class ChatBotView(LoginRequiredMixin, View):
         
         except:
             return JsonResponse({"success": False, "error": "Método não permitido"}, status=405)
-
-########################## View da página de Nova Conversa (Chat) ########################################
-class NewChatBotView(LoginRequiredMixin, View):
-    def get(self, request):
-        usuario = Usuario.objects.get(pk=request.user.pk) # Obtém usuário
-
-        context = {
-            "nome_usuario": usuario.username.title(), # Mostra nome do usuário com letra maiúscula
-            "conversa_id": None,
-            "prompt_instrucao": usuario.prompt_instrucao,
-        }
-        return render(request, "chat.html", context)
-    
-    def post(self, request):
-        conteudo_PDF = ""
-
-        usuario = Usuario.objects.get(pk=request.user.pk) # Obtém usuário
-        conteudo_mensagem_usuario = request.POST["message"] #extrai conteúdo da mensagem 
-
-        if len(conteudo_mensagem_usuario) >= 1: # Cria um nome para a conversa a partir dos primeiros caracteres da mensagem
-            if len(conteudo_mensagem_usuario) > 20:
-                nome_conversa = conteudo_mensagem_usuario[:20] + "..."
-            else:
-                nome_conversa = conteudo_mensagem_usuario
-            
-            nova_conversa = Conversa(usuario=usuario, nome=nome_conversa) #Cria nova conversa
-            nova_conversa.save()
-            nova_mensagem = Mensagem(conversa=nova_conversa, texto=conteudo_mensagem_usuario) #Cria nova mensagem
-            nova_mensagem.save()
-
-            arquivo = request.FILES.get("arquivo")
-            if arquivo: # Anexa arquivo a mensagem, se houver
-                nome_valido = Storage().get_valid_name(str(arquivo))
-                documento = Documento.objects.create(titulo=nome_valido, arquivo=arquivo, mensagem=nova_mensagem, usuario=usuario) # Salva arquivo
-
-                # ------------------------------------------------------
-                # Faz uma requisição para a API para obter string do PDF
-                # ------------------------------------------------------
-                # Configure API key authorization: Apikey
-                configuration = cloudmersive_convert_api_client.Configuration()
-                configuration.api_key['Apikey'] = config('CLOUDMERSIVE_API_KEY')
-                # Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
-                # configuration.api_key_prefix['Apikey'] = 'Bearer'
-
-                # create an instance of the API class
-                api_instance = cloudmersive_convert_api_client.ConvertDocumentApi(cloudmersive_convert_api_client.ApiClient(configuration))
-                input_file = os.path.join(settings.MEDIA_ROOT, "upload", documento.titulo) # file | Input file to perform the operation on.
-                text_formatting_mode = 'preserveWhitespace' # str | Optional; specify how whitespace should be handled when converting PDF to text.  Possible values are 'preserveWhitespace' which will attempt to preserve whitespace in the document and relative positioning of text within the document, and 'minimizeWhitespace' which will not insert additional spaces into the document in most cases.  Default is 'preserveWhitespace'. (optional)
-
-                try:
-                    # Convert PDF Document to Text (txt)
-                    api_response = api_instance.convert_document_pdf_to_txt(input_file, text_formatting_mode=text_formatting_mode)
-
-                    if api_response.successful:
-                        conteudo_PDF = "Conteúdo do PDF anexado à mensagem: " + api_response.text_result
-
-                except ApiException as e:
-                    print("Exception when calling ConvertDocumentApi->convert_document_pdf_to_txt: %s\n" % e)
-
-            else:
-                documento = None
-
-            # -----------------------------------
-            # Faz uma requisição para a API da IA
-            # -----------------------------------            
-            client = openai.OpenAI( # Faz uma requisição para a API da IA
-                api_key=config('LLM_API_KEY'),
-                base_url="https://chat.maritaca.ai/api"
-            )
-
-            response = client.chat.completions.create( # Corpo da requisição
-              model="sabia-3",
-              messages=[
-                {"role": "system", "content": usuario.prompt_instrucao},
-                {"role": "user", "content": conteudo_mensagem_usuario + conteudo_PDF},
-              ],
-              max_tokens=8000
-            )
-            mensagem_IA = response.choices[0].message.content # Extrai mensagem da IA
-
-            nova_mensagem_IA = Mensagem(conversa=nova_conversa, texto=mensagem_IA, eh_do_usuario=False) #Salva resposta da IA
-            nova_mensagem_IA.save()
-
-            redirect_url = reverse('chat', args=[nova_conversa.pk]) # Envia mensagem da IA para o front junto com o nome da nova conversa, ID e URL
-            return JsonResponse({
-                'success': True, 
-                'message': mensagem_IA, 
-                'nome_da_nova_conversa': nome_conversa, 
-                'nova_conversa_id': nova_conversa.pk, 
-                'redirect': redirect_url,
-                'documento': {
-                    'pk': documento.pk,
-                    'titulo': documento.titulo,
-                } if documento else None
-            })
-        
-        else:
-            return JsonResponse({"success": False, "error": "Mensagem inválida"})
 
 ######################### View da API para obter a lista de conversas ########################################
 class GetConversasView(LoginRequiredMixin, View):
