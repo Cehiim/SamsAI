@@ -301,6 +301,7 @@ a.profile-btn {
 
 button:hover.profile-btn, a:hover.profile-btn {
   background-color: rgb(187, 78, 91);
+  border-radius: 4px;
 }
 
 .chat-window {
@@ -812,13 +813,14 @@ body.light-theme .login-container {
 /* Menu inline de opções (aparece ao clicar no ícone de opções) */
 .inline-popup {
   position: absolute;
-  top: 115%;
+  bottom: 130%;
   left: 105%;
   transform: translate(0, -50%); 
   background: rgb(148, 63, 73);
   border-radius: 5px;
   padding: 0.8em;
   z-index: 9999;
+  transform: rotate(-90deg);
 }
 
 .inline-popup button {
@@ -844,4 +846,5 @@ body.light-theme .login-container {
   padding: 0 10px 5px 0;
   user-select: none;
   font-size: 1rem;
+  transform: rotate(90deg);
 }

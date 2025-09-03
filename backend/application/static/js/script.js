@@ -133,7 +133,7 @@ document.addEventListener("DOMContentLoaded", function() {
       historyList.innerHTML = `
       <li class="conversation-item" data-id="new-chat" onclick="window.location.href='/chat/new'">
         <a class="conversation-title">Nova Conversa</a>
-        <img style="height: 20px; width: 20px; margin-right: 5px;" src="/static/img/pen-to-square.svg" alt="Inicie uma nova conversa">
+        <i class="fa fa-pen-to-square" style="font-size: 20px; margin-right: 5px;"></i>
       </li>
       `;
     }
@@ -142,7 +142,7 @@ document.addEventListener("DOMContentLoaded", function() {
       historyList.innerHTML = `
       <li style="background-color: rgb(148, 63, 73);" class="conversation-item" data-id="new-chat" onclick="window.location.href='/chat/new'">
         <a class="conversation-title">Nova Conversa</a>
-        <img style="height: 20px; width: 20px; margin-right: 5px;" src="/static/img/pen-to-square.svg" alt="Inicie uma nova conversa">
+        <i class="fa fa-pen-to-square" style="font-size: 20px; margin-right: 5px;"></i>
       </li>
       `;
     }
@@ -163,9 +163,8 @@ document.addEventListener("DOMContentLoaded", function() {
       titleP.textContent = conv.fields.nome;
       
       // Ícone de opções (representado por "...")
-      const optionsIcon = document.createElement("span");
-      optionsIcon.classList.add("options-icon");
-      optionsIcon.textContent = "...";
+      const optionsIcon = document.createElement("i");
+      optionsIcon.classList.add("options-icon", "fa", "fa-ellipsis");
       
       // Evento de clique para exibir menu inline de opções
       optionsIcon.addEventListener("click", (e) => {
