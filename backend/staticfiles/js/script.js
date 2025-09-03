@@ -163,9 +163,8 @@ document.addEventListener("DOMContentLoaded", function() {
       titleP.textContent = conv.fields.nome;
       
       // Ícone de opções (representado por "...")
-      const optionsIcon = document.createElement("span");
-      optionsIcon.classList.add("options-icon");
-      optionsIcon.textContent = "...";
+      const optionsIcon = document.createElement("i");
+      optionsIcon.classList.add("options-icon", "fa", "fa-ellipsis");
       
       // Evento de clique para exibir menu inline de opções
       optionsIcon.addEventListener("click", (e) => {
@@ -725,7 +724,8 @@ function ShowErrorMessage(errorMessage)
             mensagens.push({fields: { texto: data.message, eh_do_usuario: false }}); // Adiciona mensagem da IA
 
             if (has_file) { // Se há um arquivo PDF anexado, recarrega todas as mensagens da conversa para exibir o caminho do PDF correto
-              mensagens[mensagens.length - 2].fields.documento.arquivo_url = `/show-pdf/${data.documento_id}`;
+              mensagens[mensagens.length - 2].fields.documento.arquivo_url = `/show-pdf/${data.documento.pk}`;
+              //console.log(data)
               renderMessages();
             } else {
               renderLastMessage(); // Mostra resposta da IA
