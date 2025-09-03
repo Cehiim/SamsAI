@@ -6,7 +6,7 @@ from django.http import FileResponse, HttpResponse, HttpResponseRedirect, JsonRe
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse
 from django.contrib.auth import login, logout
-from .models import *
+from .models import Usuario, Conversa, Mensagem, Documento
 from django.contrib.auth.hashers import check_password
 from django.contrib import messages
 from django.core.exceptions import ValidationError, PermissionDenied
@@ -17,10 +17,9 @@ from django.core.files.storage.base import Storage
 from django.views.decorators.clickjacking import xframe_options_exempt
 from PyPDF2 import PdfReader, PdfWriter
 from io import BytesIO
-import time
 import cloudmersive_convert_api_client
 from cloudmersive_convert_api_client.rest import ApiException
-from pprint import pprint
+# from pprint import pprint
 import json
 import openai
 import os

@@ -1,7 +1,20 @@
 from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
-from .views import *
+from .views import (LoginView, 
+                    LogoutView, 
+                    ChatBotView, 
+                    CadastroView, 
+                    RenameView, 
+                    DeleteView, 
+                    ChangePromptView, 
+                    csrf_token_view,
+                    GetConversasView,
+                    GetMensagensView,
+                    GetDocumentosView,
+                    ShowPDFView,
+                    DeletePDFView
+                    )
 
 urlpatterns = [
     path('', LoginView.as_view(), name='login'),
