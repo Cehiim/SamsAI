@@ -1,54 +1,33 @@
 # Endereço na Internet
- * http://3.18.83.210/
+ * http://54.198.72.52/
 
 # Passo a passo para configuração do ambiente virtual
 
 ## Pré-requisitos:
  * PostgresSQL 17 ou superior
  * Python 3.12 ou superior
- * (opcional) PgAdmin4 (permite criar mais facilmente e visualizar o banco de dados por uma interface gráfica)
 
-## 1) Crie um banco de dados com o Postgres e um usuário e senha (esse passo pode ser feito no PgAdmin4)
-```
-sudo -i -u postgres
-psql
-CREATE DATABASE SamsAI;
-CREATE USER meu_user WITH PASSWORD 'minha_senha';
-ALTER ROLE meu_user SET client_encoding TO 'UTF8';
-ALTER ROLE meu_user SET default_transaction_isolation TO 'read committed';
-ALTER ROLE meu_user SET timezone TO 'UTC';
-GRANT ALL PRIVILEGES ON DATABASE SamsAI TO meu_user;
-\q
-```
-
-## 2) Clone o repositório
+## 1) Clone o repositório
 ```
 git clone git@github.com:Cehiim/SamsAI.git
 ```
 
-## 3) Mude para a sua branch
-```
-git checkout Dallape
-```
-
-## 4) Entre na pasta backend e instale o ambiente virtual venv e ative-o
+## 2) Entre na pasta backend e instale o ambiente virtual venv e ative-o
 ```
 python3 -m venv venv
-```
-
-### No Linux ou MacOS
-```
 source venv/bin/activate
 ```
 
-### No Windows powershell
+## 3) Atualize os pacotes
 ```
-source venv/Scripts/Activate.ps1
+sudo apt update && sudo apt upgrade -y
 ```
 
-### No Windows cmd
+## 4) Instale as dependências da biblioteca psycopg2 e para o postgres
 ```
-source venv/Scripts/Activate.bat
+sudo apt install -y libpq-dev gcc python3-dev
+sudo apt install postgresql-client-common
+sudo apt install -y postgresql-client-17
 ```
 
 ## 5) Instale todos os pacotes necessários
@@ -69,12 +48,16 @@ SECRET_KEY='sua senha secreta'
 
 API_KEY="chave da API"
 
-DB_NAME='SamsAI'
+DB_NAME='nome-database'
 DB_USER='meu_user'
 DB_PASSWORD='minha_senha'
-DB_HOST='localhost'
+DB_HOST='endpoint_banco'
 
-DEBUG=True
+DEBUG=False
+```
+### Se tiver dificuldade para saber qual é o nome do banco de dados, provavelmente é postgres, realize um teste de conexão:
+```
+psql -h database-samsai.c4jqgs8q0mms.us-east-1.rds.amazonaws.com -U postgres -d postgres
 ```
 
 ## 8) Crie um novo super usuário
@@ -88,30 +71,36 @@ python manage.py migrate
 python manage.py runserver
 ```
 
+## 10) Instale o docker e o docker compose
+```
+sudo snap install docker
+sudo apt  install docker-compose
+```
+
 # Configurando o Docker no ambiente de produção
 ## 0) Se você está apenas atualizando o código na instância, rode
 ```
-docker-compose down --volumes --remove-orphans
-docker-compose up -d
+sudo docker-compose down --volumes --remove-orphans
+sudo docker-compose up -d
 ```
 
 ## 1) Se você estiver criando as imagens do zero, prepare-as com docker compose
 ```
-docker-compose build --no-cache
+sudo docker-compose build --no-cache
 ```
 
 ## 2) Rode os containers em segundo plano
 ```
-docker-compose up -d
+sudo docker-compose up -d
 ```
 
 ### Se esse passo falhar, digite os comandos a seguir e tente de novo
 ```
-docker-compose down --volumes --remove-orphans
-docker image prune -a
+sudo docker-compose down --volumes --remove-orphans
+sudo docker image prune -a
 ```
 
 ## 3) Verifique os containers
 ```
-docker ps
+sudo docker ps
 ```
