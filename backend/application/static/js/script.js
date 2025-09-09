@@ -665,7 +665,6 @@ function ShowErrorMessage(errorMessage)
         { messageInput.value = ""; } // Se a mensagem conter um número de caracteres dentro dos limites, esvazia o Input
     
     isSending = true; 
-    sendBtn.disabled = true; //Desabilita botão de envio
 
     if (GetConversaID() == "new")
     {
@@ -725,7 +724,7 @@ function ShowErrorMessage(errorMessage)
 
             if (has_file) { // Se há um arquivo PDF anexado, recarrega todas as mensagens da conversa para exibir o caminho do PDF correto
               mensagens[mensagens.length - 2].fields.documento.arquivo_url = `/show-pdf/${data.documento.pk}`;
-              //console.log(data)
+              documents.push({fields: {titulo: data.documento.titulo}, pk: data.documento.pk});
               renderMessages();
             } else {
               renderLastMessage(); // Mostra resposta da IA
@@ -812,6 +811,7 @@ function ShowErrorMessage(errorMessage)
     CloseFile.click();
     ShowAttachedFile.style.display = "";
     AttachedFileName.textContent = "";
+    has_file = false
   })
 
   // Coloca o PDF como anexado à mensagem

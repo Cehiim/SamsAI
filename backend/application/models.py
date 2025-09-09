@@ -1,3 +1,4 @@
+from tabnanny import verbose
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import MinLengthValidator
@@ -49,3 +50,15 @@ class Documento(models.Model):
     class Meta:
         verbose_name = "Documento"
         verbose_name_plural = "Documentos"
+
+class DocumentoJSON(models.Model):
+    titulo = models.CharField(max_length=255)
+    conteudo = models.JSONField()
+
+    def __str__(self):
+        return self.titulo
+    
+    class Meta:
+        verbose_name = "Documento JSON"
+        verbose_name_plural = "Documentos JSON"
+

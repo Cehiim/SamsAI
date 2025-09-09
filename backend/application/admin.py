@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Usuario, Mensagem, Conversa, Documento
+from .models import Usuario, Mensagem, Conversa, Documento, DocumentoJSON
 from django.contrib.auth.admin import UserAdmin
 
 @admin.register(Usuario)
@@ -17,3 +17,7 @@ class MensagemAdmin(admin.ModelAdmin):
 @admin.register(Documento)
 class DocumentoAdmin(admin.ModelAdmin):
     list_display = ('pk', 'usuario', 'mensagem', 'titulo', 'data')
+
+@admin.register(DocumentoJSON)
+class DocumentoJSONAdmin(admin.ModelAdmin):
+    list_display = ('pk', 'titulo', 'conteudo')

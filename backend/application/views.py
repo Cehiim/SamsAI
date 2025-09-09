@@ -1,4 +1,4 @@
-from __future__ import print_function
+# from __future__ import print_function
 from django.conf import settings
 from django.shortcuts import redirect, render
 from django.views import View
@@ -17,9 +17,10 @@ from django.core.files.storage.base import Storage
 from django.views.decorators.clickjacking import xframe_options_exempt
 from PyPDF2 import PdfReader, PdfWriter
 from io import BytesIO
-import cloudmersive_convert_api_client
-from cloudmersive_convert_api_client.rest import ApiException
+# import cloudmersive_convert_api_client
+# from cloudmersive_convert_api_client.rest import ApiException
 # from pprint import pprint
+import pdfplumber
 import json
 import openai
 import os
@@ -160,28 +161,16 @@ class ChatBotView(LoginRequiredMixin, View):
                 documento = Documento.objects.create(titulo=nome_valido, arquivo=arquivo, mensagem=nova_mensagem_usuario, usuario=usuario) # Salva arquivo
 
                 # ------------------------------------------------------
-                # Faz uma requisição para a API para obter string do PDF
+                # Usa biblioteca pdfplumber para obter string do PDF
                 # ------------------------------------------------------
-                # Configure API key authorization: Apikey
-                configuration = cloudmersive_convert_api_client.Configuration()
-                configuration.api_key['Apikey'] = config('CLOUDMERSIVE_API_KEY')
-                # Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
-                # configuration.api_key_prefix['Apikey'] = 'Bearer'
+                file_path = os.path.join(settings.MEDIA_ROOT, "upload", documento.titulo)
+                with pdfplumber.open(file_path) as pdf:
+                    for pagina in pdf.pages:
+                        conteudo_PDF += pagina.extract_text() + "\n"
 
-                # create an instance of the API class
-                api_instance = cloudmersive_convert_api_client.ConvertDocumentApi(cloudmersive_convert_api_client.ApiClient(configuration))
-                input_file = os.path.join(settings.MEDIA_ROOT, "upload", documento.titulo) # file | Input file to perform the operation on.
-                text_formatting_mode = 'preserveWhitespace' # str | Optional; specify how whitespace should be handled when converting PDF to text.  Possible values are 'preserveWhitespace' which will attempt to preserve whitespace in the document and relative positioning of text within the document, and 'minimizeWhitespace' which will not insert additional spaces into the document in most cases.  Default is 'preserveWhitespace'. (optional)
-
-                try:
-                    # Convert PDF Document to Text (txt)
-                    api_response = api_instance.convert_document_pdf_to_txt(input_file, text_formatting_mode=text_formatting_mode)
-
-                    if api_response.successful:
-                        conteudo_PDF = "Conteúdo do PDF anexado à mensagem: " + api_response.text_result
-
-                except ApiException as e:
-                    print("Exception when calling ConvertDocumentApi->convert_document_pdf_to_txt: %s\n" % e)
+                print(conteudo_PDF)
+                conteudo_PDF = "Conteúdo do PDF anexado à mensagem: " + conteudo_PDF
+                
 
             else:
                 documento = None
@@ -425,7 +414,7 @@ class DeletePDFView(LoginRequiredMixin, View):
             raise PermissionDenied("Você não possui permissão para apagar este arquivo PDF.")
 
         except Documento.DoesNotExist:
-            return JsonResponse({"success": False, "error": f"Documento '{nome_documento}' não encontrado"}, status=404)
+            return JsonResponse({"success": False, "error": f"Documento não encontrado"}, status=404)
         
         except Exception as e:
             return JsonResponse({"success": False, "error": str(e)}, status=500)
