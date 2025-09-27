@@ -106,9 +106,6 @@ class ChatBotView(LoginRequiredMixin, View):
         if not request.user.is_authenticated:
             raise PermissionDenied("Você não possui permissão para visualizar esta conversa. Faça login com sua conta e tente novamente")
 
-        # Carrega JSONs no retriever
-        carregar_documentos_no_retriever()
-
         usuario = Usuario.objects.get(pk=request.user.pk) # Obtém usuário
 
         context = {
@@ -185,7 +182,9 @@ class ChatBotView(LoginRequiredMixin, View):
             # ------------------------------------------
             # Realiza consulta com RAG aos arquivos JSON
             # ------------------------------------------
+            carregar_documentos_no_retriever() # Carrega JSONs no retriever
             contexto = consultar_rag(conteudo_mensagem_usuario)
+            print(contexto)
 
             # -----------------------------------
             # Faz uma requisição para a API da IA

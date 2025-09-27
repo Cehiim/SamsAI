@@ -20,4 +20,4 @@ class DocumentoAdmin(admin.ModelAdmin):
 
 @admin.register(DocumentoJSON)
 class DocumentoJSONAdmin(admin.ModelAdmin):
-    list_display = ('pk', 'titulo', 'conteudo')
+    list_display = ('pk', 'titulo')
