@@ -7,6 +7,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse
 from django.contrib.auth import login, logout
 from .models import Usuario, Conversa, Mensagem, Documento
+from .rag import consultar_rag, carregar_documentos_no_retriever
 from django.contrib.auth.hashers import check_password
 from django.contrib import messages
 from django.core.exceptions import ValidationError, PermissionDenied
@@ -102,6 +103,12 @@ class CadastroView(View):
 ########################## View da página de Conversa (Chat) ########################################
 class ChatBotView(LoginRequiredMixin, View):
     def get(self, request, conversa_id=None):
+        if not request.user.is_authenticated:
+            raise PermissionDenied("Você não possui permissão para visualizar esta conversa. Faça login com sua conta e tente novamente")
+
+        # Carrega JSONs no retriever
+        carregar_documentos_no_retriever()
+
         usuario = Usuario.objects.get(pk=request.user.pk) # Obtém usuário
 
         context = {
@@ -174,6 +181,11 @@ class ChatBotView(LoginRequiredMixin, View):
 
             else:
                 documento = None
+            
+            # ------------------------------------------
+            # Realiza consulta com RAG aos arquivos JSON
+            # ------------------------------------------
+            contexto = consultar_rag(conteudo_mensagem_usuario)
 
             # -----------------------------------
             # Faz uma requisição para a API da IA
@@ -187,7 +199,7 @@ class ChatBotView(LoginRequiredMixin, View):
               model="sabia-3",
               messages=[
                 {"role": "system", "content": usuario.prompt_instrucao},
-                {"role": "user", "content": conteudo_mensagem_usuario + conteudo_PDF},
+                {"role": "user", "content": f"Contexto: {contexto} Pergunta do usuário: {conteudo_mensagem_usuario} Conteúdo do PDF: {conteudo_PDF}"},
               ],
               max_tokens=8000
             )
