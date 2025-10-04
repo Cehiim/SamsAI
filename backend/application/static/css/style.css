@@ -360,7 +360,6 @@ button:hover.profile-btn, a:hover.profile-btn {
 }
 
 .btn-file,
-.btn-audio,
 .btn-send {
   background-color: #444;
   border: none;
@@ -379,7 +378,6 @@ button:hover.profile-btn, a:hover.profile-btn {
 
 
 .btn-file:hover,
-.btn-audio:hover,
 .btn-send:hover {
   background-color: #555;
 }
@@ -762,7 +760,6 @@ body.light-theme .login-container {
 }
 
 .conversation-container .btn-file,
-.conversation-container .btn-audio,
 .conversation-container .btn-send {
   flex: 0 0 40px;
   height: 40px;

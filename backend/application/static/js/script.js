@@ -14,7 +14,6 @@ document.addEventListener("DOMContentLoaded", function () {
 	}
 
 	let conversations = null; // Lista de conversas
-	var currentConversation = false; // Conversa atual
 
 	// Obtém a lista de conversas da sidebar
 	async function loadConversations() {
@@ -74,7 +73,6 @@ document.addEventListener("DOMContentLoaded", function () {
 	const sendBtn = document.getElementById("sendBtn");
 	const fileBtn = document.getElementById("fileBtn");
 	const fileInput = document.getElementById("fileInput");
-	const audioBtn = document.getElementById("audioBtn");
 
 	const profileIcon = document.getElementById("profileIcon");
 	const profileDropdown = document.getElementById("profileDropdown");
@@ -89,9 +87,7 @@ document.addEventListener("DOMContentLoaded", function () {
 	const CloseFile = document.getElementById("close-file");
 	const CloseFileError = document.getElementById("close-file-error");
 	const ViewFileButtons = document.getElementById("ViewFileButtons");
-	const ViewFileButtonsError = document.getElementById(
-		"ViewFileButtonsError"
-	);
+	const ViewFileButtonsError = document.getElementById("ViewFileButtonsError");
 	const ConfirmSendFile = document.getElementById("confirm-send-file");
 	const DesattachFile = document.getElementById("desattach-file");
 	const ShowAttachedFile = document.getElementById("show-attached-file");
@@ -868,21 +864,5 @@ document.addEventListener("DOMContentLoaded", function () {
 		has_file = true;
 		const file = fileInput.files[0];
 		AttachedFileName.textContent = file.name;
-	});
-
-	// Simulação de envio de áudio
-	audioBtn.addEventListener("click", () => {
-		currentConversation.messages.push({
-			text: "Áudio enviado (simulação).",
-			sender: "user",
-		});
-		renderMessages();
-		setTimeout(() => {
-			currentConversation.messages.push({
-				text: "Áudio recebido. Vou processar a informação!",
-				sender: "bot",
-			});
-			renderMessages();
-		}, 500);
 	});
 });
