@@ -1,4 +1,3 @@
-# from __future__ import print_function
 from django.conf import settings
 from django.shortcuts import redirect, render
 from django.views import View
@@ -8,6 +7,7 @@ from django.urls import reverse
 from django.contrib.auth import login, logout
 from .models import Usuario, Conversa, Mensagem, Documento
 from .rag import consultar_rag, carregar_documentos_no_retriever
+from .run_tests import obtem_contexto, chama_sabia3
 from django.contrib.auth.hashers import check_password
 from django.contrib import messages
 from django.core.exceptions import ValidationError, PermissionDenied
@@ -18,9 +18,7 @@ from django.core.files.storage.base import Storage
 from django.views.decorators.clickjacking import xframe_options_exempt
 from PyPDF2 import PdfReader, PdfWriter
 from io import BytesIO
-# import cloudmersive_convert_api_client
-# from cloudmersive_convert_api_client.rest import ApiException
-# from pprint import pprint
+import pandas as pd
 import pdfplumber
 import json
 import openai
@@ -433,3 +431,13 @@ class DeletePDFView(LoginRequiredMixin, View):
         except:
             return JsonResponse({"success": False, "error": "Método não permitido"}, status=405)
         
+
+######################### View para realizar testes com o modelo ########################################
+class RunTestsView(View):
+    def get(self, request):
+        df = pd.read_json(os.path.join(settings.BASE_DIR, "questions.json"))
+        print(df)
+
+        # -----------------------------------
+        # TESTE 1 - Sabiá puro
+        # -----------------------------------

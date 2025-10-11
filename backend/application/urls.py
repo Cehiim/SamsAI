@@ -13,7 +13,8 @@ from .views import (LoginView,
                     GetMensagensView,
                     GetDocumentosView,
                     ShowPDFView,
-                    DeletePDFView
+                    DeletePDFView,
+                    RunTestsView
                     )
 
 urlpatterns = [
@@ -31,6 +32,7 @@ urlpatterns = [
     path('api/documentos', GetDocumentosView.as_view(), name='get-documentos'),
     path('show-pdf/<int:file_id>', ShowPDFView.as_view(), name='show-pdf'),
     path('delete-pdf/<int:file_id>', DeletePDFView.as_view(), name='delete-pdf'),
+    path('run-tests', RunTestsView.as_view(), name='run-tests')
 ]
 
 if settings.DEBUG:
