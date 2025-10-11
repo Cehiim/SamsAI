@@ -17,3 +17,5 @@ docker-compose.yml
 nginx
 
 .prettierrc
+
+resultados_testes.csv
