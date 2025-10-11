@@ -456,7 +456,9 @@ class RunTestsView(View):
         count = 0
         for questao in questoes_meio_ambiente:
             resultado = chama_sabia3(questao["questao"])
-            resultado = resultado.upper()
+            resultado = resultado.upper()[1]
+
+            print("Compara:", resultado, questao["resposta"])
 
             if resultado == questao["resposta"]:
                 teste1_acertos_TOTAL += 1
@@ -466,7 +468,7 @@ class RunTestsView(View):
                     teste1_acertos_ENADE += 1
 
             count += 1
-            print(count, end="  ")
+            print(count)
         print("\nTeste 1 concluído com sucesso")
 
         carregar_documentos_no_retriever() # Carrega JSONs no retriever
@@ -482,7 +484,9 @@ class RunTestsView(View):
         count = 0
         for questao in questoes_meio_ambiente:
             resultado = chama_sabia3(questao["questao"], consultar_rag(questao["questao"]))
-            resultado = resultado.upper()
+            resultado = resultado.upper()[1]
+
+            print("Compara:", resultado, questao["resposta"])
 
             if resultado == questao["resposta"]:
                 teste2_acertos_TOTAL += 1
@@ -492,7 +496,7 @@ class RunTestsView(View):
                     teste2_acertos_ENADE += 1
             
             count += 1
-            print(count, end="  ")
+            print(count)
         print("Teste 2 concluído com sucesso")
 
         # --------------------------------------------------------
@@ -504,13 +508,15 @@ class RunTestsView(View):
         count = 0
         for questao in questoes_gerais:
             resultado = chama_sabia3(questao["questao"], consultar_rag(questao["questao"]))
-            resultado = resultado.upper()
+            resultado = resultado.upper()[1]
+
+            print("Compara:", resultado, questao["resposta"])
 
             if resultado == questao["resposta"]:
                 teste3_acertos_TOTAL += 1
             
             count += 1
-            print(count, end="  ")
+            print(count)
         print("Teste 3 concluído com sucesso")
 
         path = os.path.join(settings.BASE_DIR, "resultados_testes.csv")
@@ -528,52 +534,52 @@ class RunTestsView(View):
                         writer.writerow([
                             "Acertos", 
                             f"{teste1_acertos_TOTAL}", 
-                            f"{(teste1_acertos_TOTAL / TOTAL_QUESTOES) * 100}", 
+                            "%.2f" % ((teste1_acertos_TOTAL * 100) / TOTAL_QUESTOES), 
                             f"{teste1_acertos_ENADE}", 
-                            f"{(teste1_acertos_ENADE / NUM_QUESTOES_MEIO_AMB_ENADE) * 100}"
+                            "%.2f" % ((teste1_acertos_ENADE * 100) / NUM_QUESTOES_MEIO_AMB_ENADE),
                             f"{teste1_acertos_OAB}",
-                            f"{(teste1_acertos_OAB / NUM_QUESTOES_MEIO_AMB_OAB) * 100}"
+                            "%.2f" % ((teste1_acertos_OAB * 100) / NUM_QUESTOES_MEIO_AMB_OAB)
                         ])
                         writer.writerow([
                             "Erros", 
                             f"{TOTAL_QUESTOES - teste1_acertos_TOTAL}", 
-                            f"{((TOTAL_QUESTOES - teste1_acertos_TOTAL) / TOTAL_QUESTOES) * 100}", 
+                            "%.2f" % (((TOTAL_QUESTOES - teste1_acertos_TOTAL) * 100) / TOTAL_QUESTOES), 
                             f"{NUM_QUESTOES_MEIO_AMB_ENADE - teste1_acertos_ENADE}", 
-                            f"{((NUM_QUESTOES_MEIO_AMB_ENADE - teste1_acertos_ENADE) / NUM_QUESTOES_MEIO_AMB_ENADE) * 100}"
+                            "%.2f" % (((NUM_QUESTOES_MEIO_AMB_ENADE - teste1_acertos_ENADE) * 100) / NUM_QUESTOES_MEIO_AMB_ENADE),
                             f"{NUM_QUESTOES_MEIO_AMB_OAB - teste1_acertos_OAB}",
-                            f"{((NUM_QUESTOES_MEIO_AMB_OAB - teste1_acertos_OAB) / NUM_QUESTOES_MEIO_AMB_OAB) * 100}"
+                            "%.2f" % (((NUM_QUESTOES_MEIO_AMB_OAB - teste1_acertos_OAB) * 100) / NUM_QUESTOES_MEIO_AMB_OAB)
                         ])
                     else:
                         writer.writerow([
                             "Acertos", 
                             f"{teste2_acertos_TOTAL}", 
-                            f"{(teste2_acertos_TOTAL / TOTAL_QUESTOES) * 100}", 
+                            "%.2f" % ((teste2_acertos_TOTAL * 100) / TOTAL_QUESTOES), 
                             f"{teste2_acertos_ENADE}", 
-                            f"{(teste2_acertos_ENADE / NUM_QUESTOES_MEIO_AMB_ENADE) * 100}"
+                            "%.2f" % ((teste2_acertos_ENADE * 100) / NUM_QUESTOES_MEIO_AMB_ENADE),
                             f"{teste2_acertos_OAB}",
-                            f"{(teste2_acertos_OAB / NUM_QUESTOES_MEIO_AMB_OAB) * 100}"
+                            "%.2f" % ((teste2_acertos_OAB * 100) / NUM_QUESTOES_MEIO_AMB_OAB)
                         ])
                         writer.writerow([
                             "Erros", 
                             f"{TOTAL_QUESTOES - teste2_acertos_TOTAL}", 
-                            f"{((TOTAL_QUESTOES - teste2_acertos_TOTAL) / TOTAL_QUESTOES) * 100}", 
+                            "%.2f" % (((TOTAL_QUESTOES - teste2_acertos_TOTAL) * 100) / TOTAL_QUESTOES), 
                             f"{NUM_QUESTOES_MEIO_AMB_ENADE - teste2_acertos_ENADE}", 
-                            f"{((NUM_QUESTOES_MEIO_AMB_ENADE - teste2_acertos_ENADE) / NUM_QUESTOES_MEIO_AMB_ENADE) * 100}"
+                            "%.2f" % (((NUM_QUESTOES_MEIO_AMB_ENADE - teste2_acertos_ENADE) * 100) / NUM_QUESTOES_MEIO_AMB_ENADE),
                             f"{NUM_QUESTOES_MEIO_AMB_OAB - teste2_acertos_OAB}",
-                            f"{((NUM_QUESTOES_MEIO_AMB_OAB - teste2_acertos_OAB) / NUM_QUESTOES_MEIO_AMB_OAB) * 100}"
+                            "%.2f" % (((NUM_QUESTOES_MEIO_AMB_OAB - teste2_acertos_OAB) * 100) / NUM_QUESTOES_MEIO_AMB_OAB)
                         ])
 
                 else:
                     writer.writerow(["Resultados", "Total", "Total (%)"])
                     writer.writerow([
                         "Acertos",
-                        f"{teste3_acertos_TOTAL}"
-                        f"{(teste3_acertos_TOTAL / TOTAL_QUESTOES) * 100}", 
+                        f"{teste3_acertos_TOTAL}",
+                        "%.2f" % ((teste3_acertos_TOTAL * 100) / TOTAL_QUESTOES), 
                     ])
                     writer.writerow([
                         "Erros",
-                        f"{TOTAL_QUESTOES - teste3_acertos_TOTAL}"
-                        f"{((TOTAL_QUESTOES - teste3_acertos_TOTAL) / TOTAL_QUESTOES) * 100}", 
+                        f"{TOTAL_QUESTOES - teste3_acertos_TOTAL}",
+                        "%.2f" % (((TOTAL_QUESTOES - teste3_acertos_TOTAL) * 100) / TOTAL_QUESTOES), 
                     ])
 
                 writer.writerow([""])
