@@ -467,7 +467,7 @@ class RunTestsView(View):
 
             count += 1
             print(count, end="  ")
-        print("Teste 1 concluído com sucesso")
+        print("\nTeste 1 concluído com sucesso")
 
         carregar_documentos_no_retriever() # Carrega JSONs no retriever
 
@@ -525,7 +525,7 @@ class RunTestsView(View):
                     writer.writerow(["Resultados", "Total", "Total (%)", "Questões ENADE", "Questões ENADE (%)", "Questões OAB", "Questões OAB (%)"])
                     
                     if i == 1:
-                        writer.writerow(
+                        writer.writerow([
                             "Acertos", 
                             f"{teste1_acertos_TOTAL}", 
                             f"{(teste1_acertos_TOTAL / TOTAL_QUESTOES) * 100}", 
@@ -533,8 +533,8 @@ class RunTestsView(View):
                             f"{(teste1_acertos_ENADE / NUM_QUESTOES_MEIO_AMB_ENADE) * 100}"
                             f"{teste1_acertos_OAB}",
                             f"{(teste1_acertos_OAB / NUM_QUESTOES_MEIO_AMB_OAB) * 100}"
-                        )
-                        writer.writerow(
+                        ])
+                        writer.writerow([
                             "Erros", 
                             f"{TOTAL_QUESTOES - teste1_acertos_TOTAL}", 
                             f"{((TOTAL_QUESTOES - teste1_acertos_TOTAL) / TOTAL_QUESTOES) * 100}", 
@@ -542,9 +542,9 @@ class RunTestsView(View):
                             f"{((NUM_QUESTOES_MEIO_AMB_ENADE - teste1_acertos_ENADE) / NUM_QUESTOES_MEIO_AMB_ENADE) * 100}"
                             f"{NUM_QUESTOES_MEIO_AMB_OAB - teste1_acertos_OAB}",
                             f"{((NUM_QUESTOES_MEIO_AMB_OAB - teste1_acertos_OAB) / NUM_QUESTOES_MEIO_AMB_OAB) * 100}"
-                        )
+                        ])
                     else:
-                        writer.writerow(
+                        writer.writerow([
                             "Acertos", 
                             f"{teste2_acertos_TOTAL}", 
                             f"{(teste2_acertos_TOTAL / TOTAL_QUESTOES) * 100}", 
@@ -552,8 +552,8 @@ class RunTestsView(View):
                             f"{(teste2_acertos_ENADE / NUM_QUESTOES_MEIO_AMB_ENADE) * 100}"
                             f"{teste2_acertos_OAB}",
                             f"{(teste2_acertos_OAB / NUM_QUESTOES_MEIO_AMB_OAB) * 100}"
-                        )
-                        writer.writerow(
+                        ])
+                        writer.writerow([
                             "Erros", 
                             f"{TOTAL_QUESTOES - teste2_acertos_TOTAL}", 
                             f"{((TOTAL_QUESTOES - teste2_acertos_TOTAL) / TOTAL_QUESTOES) * 100}", 
@@ -561,20 +561,20 @@ class RunTestsView(View):
                             f"{((NUM_QUESTOES_MEIO_AMB_ENADE - teste2_acertos_ENADE) / NUM_QUESTOES_MEIO_AMB_ENADE) * 100}"
                             f"{NUM_QUESTOES_MEIO_AMB_OAB - teste2_acertos_OAB}",
                             f"{((NUM_QUESTOES_MEIO_AMB_OAB - teste2_acertos_OAB) / NUM_QUESTOES_MEIO_AMB_OAB) * 100}"
-                        )
+                        ])
 
                 else:
                     writer.writerow(["Resultados", "Total", "Total (%)"])
-                    writer.writerow(
+                    writer.writerow([
                         "Acertos",
                         f"{teste3_acertos_TOTAL}"
                         f"{(teste3_acertos_TOTAL / TOTAL_QUESTOES) * 100}", 
-                    )
-                    writer.writerow(
+                    ])
+                    writer.writerow([
                         "Erros",
                         f"{TOTAL_QUESTOES - teste3_acertos_TOTAL}"
                         f"{((TOTAL_QUESTOES - teste3_acertos_TOTAL) / TOTAL_QUESTOES) * 100}", 
-                    )
+                    ])
 
                 writer.writerow([""])
         print("Arquivo .csv construído com sucesso!")
