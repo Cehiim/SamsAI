@@ -1,10 +1,9 @@
-from rag import consultar_rag, carregar_documentos_no_retriever
+from .rag import consultar_rag
 from decouple import config
 import openai
 
 # Obtém contexto utilizando RAG
 def obtem_contexto(mensagem):
-    carregar_documentos_no_retriever() # Carrega JSONs no retriever
     contexto = consultar_rag(mensagem)
     return contexto
 
