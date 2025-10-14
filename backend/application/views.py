@@ -584,6 +584,60 @@ class RunTestsView(View):
 
                 writer.writerow([""])
         print("Arquivo .csv construído com sucesso!")
+
+        context = {
+            "t1": {
+                "acertos": {
+                    "total": teste1_acertos_TOTAL,
+                    "total_porcento": "%.2f" % ((teste1_acertos_TOTAL * 100) / TOTAL_QUESTOES),
+                    "enade": teste1_acertos_ENADE,
+                    "enade_porcento":  "%.2f" % ((teste1_acertos_ENADE * 100) / NUM_QUESTOES_MEIO_AMB_ENADE),
+                    "oab": teste1_acertos_OAB,
+                    "oab_porcento":  "%.2f" % ((teste2_acertos_OAB * 100) / NUM_QUESTOES_MEIO_AMB_OAB)
+                },
+
+                "erros": {
+                    "total": TOTAL_QUESTOES - teste1_acertos_TOTAL,
+                    "total_porcento": "%.2f" % (((TOTAL_QUESTOES - teste1_acertos_TOTAL) * 100) / TOTAL_QUESTOES),
+                    "enade": NUM_QUESTOES_MEIO_AMB_ENADE - teste1_acertos_ENADE,
+                    "enade_porcento": "%.2f" % (((NUM_QUESTOES_MEIO_AMB_ENADE - teste1_acertos_ENADE) * 100) / NUM_QUESTOES_MEIO_AMB_ENADE),
+                    "oab": NUM_QUESTOES_MEIO_AMB_OAB - teste1_acertos_OAB,
+                    "oab_porcento": "%.2f" % (((NUM_QUESTOES_MEIO_AMB_OAB - teste1_acertos_OAB) * 100) / NUM_QUESTOES_MEIO_AMB_OAB)
+                }
+            },
+
+            "t2": {
+                "acertos": {
+                    "total": teste2_acertos_TOTAL,
+                    "total_porcento": "%.2f" % ((teste2_acertos_TOTAL * 100) / TOTAL_QUESTOES),
+                    "enade": teste2_acertos_ENADE,
+                    "enade_porcento":  "%.2f" % ((teste2_acertos_ENADE * 100) / NUM_QUESTOES_MEIO_AMB_ENADE),
+                    "oab": teste2_acertos_OAB,
+                    "oab_porcento":  "%.2f" % ((teste2_acertos_OAB * 100) / NUM_QUESTOES_MEIO_AMB_OAB)
+                },
+
+                "erros": {
+                    "total": TOTAL_QUESTOES - teste2_acertos_TOTAL,
+                    "total_porcento": "%.2f" % (((TOTAL_QUESTOES - teste2_acertos_TOTAL) * 100) / TOTAL_QUESTOES),
+                    "enade": NUM_QUESTOES_MEIO_AMB_ENADE - teste2_acertos_ENADE,
+                    "enade_porcento": "%.2f" % (((NUM_QUESTOES_MEIO_AMB_ENADE - teste2_acertos_ENADE) * 100) / NUM_QUESTOES_MEIO_AMB_ENADE),
+                    "oab": NUM_QUESTOES_MEIO_AMB_OAB - teste2_acertos_OAB,
+                    "oab_porcento": "%.2f" % (((NUM_QUESTOES_MEIO_AMB_OAB - teste2_acertos_OAB) * 100) / NUM_QUESTOES_MEIO_AMB_OAB)
+                }
+            },
+
+            "t3": {
+                "acertos": {
+                    "total": teste3_acertos_TOTAL,
+                    "total_porcento": "%.2f" % ((teste3_acertos_TOTAL * 100) / TOTAL_QUESTOES),
+                },
+
+                "erros": {
+                    "total": TOTAL_QUESTOES - teste3_acertos_TOTAL,
+                    "total_porcento": "%.2f" % (((TOTAL_QUESTOES - teste3_acertos_TOTAL) * 100) / TOTAL_QUESTOES)
+                }
+            }
+        }
                 
 
-        return JsonResponse({"success": True})
+        return render(request, 'run-tests.html', context)

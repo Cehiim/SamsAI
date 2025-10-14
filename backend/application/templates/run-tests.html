@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resultado dos testes</title>
+</head>
+<body>
+    <table border="1" style="margin-bottom: 10px;">
+        <thead>
+            <tr>
+                <th>Teste 1</th>
+            </tr>
+            <tr>
+                <th>Resultados</th>
+                <th>Total</th>
+                <th>Total (%)</th>
+                <th>Questões ENADE</th>
+                <th>Questões ENADE (%)</th>
+                <th>Questões OAB</th>
+                <th>Questões OAB (%)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Acertos</td>
+                <td>{{ t1.acertos.total }}</td>
+                <td>{{ t1.acertos.total_porcento }}</td>
+                <td>{{ t1.acertos.enade }}</td>
+                <td>{{ t1.acertos.enade_porcento }}</td>
+                <td>{{ t1.acertos.oab }}</td>
+                <td>{{ t1.acertos.oab_porcento }}</td>
+            </tr>
+            <tr>
+                <td>Erros</td>
+                <td>{{ t1.erros.total }}</td>
+                <td>{{ t1.erros.total_porcento }}</td>
+                <td>{{ t1.erros.enade }}</td>
+                <td>{{ t1.erros.enade_porcento }}</td>
+                <td>{{ t1.erros.oab }}</td>
+                <td>{{ t1.erros.oab_porcento }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <table border="1" style="margin-bottom: 10px;">
+        <thead>
+            <tr>
+                <th>Teste 2</th>
+            </tr>
+            <tr>
+                <th>Resultados</th>
+                <th>Total</th>
+                <th>Total (%)</th>
+                <th>Questões ENADE</th>
+                <th>Questões ENADE (%)</th>
+                <th>Questões OAB</th>
+                <th>Questões OAB (%)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Acertos</td>
+                <td>{{ t2.acertos.total }}</td>
+                <td>{{ t2.acertos.total_porcento }}</td>
+                <td>{{ t2.acertos.enade }}</td>
+                <td>{{ t2.acertos.enade_porcento }}</td>
+                <td>{{ t2.acertos.oab }}</td>
+                <td>{{ t2.acertos.oab_porcento }}</td>
+            </tr>
+            <tr>
+                <td>Erros</td>
+                <td>{{ t2.erros.total }}</td>
+                <td>{{ t2.erros.total_porcento }}</td>
+                <td>{{ t2.erros.enade }}</td>
+                <td>{{ t2.erros.enade_porcento }}</td>
+                <td>{{ t2.erros.oab }}</td>
+                <td>{{ t2.erros.oab_porcento }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <table border="1" style="margin-bottom: 10px;">
+        <thead>
+            <tr>
+                <th>Teste 3</th>
+            </tr>
+            <tr>
+                <th>Resultados</th>
+                <th>Total</th>
+                <th>Total (%)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Acertos</td>
+                <td>{{ t3.acertos.total }}</td>
+                <td>{{ t3.acertos.total_porcento }}</td>
+            </tr>
+            <tr>
+                <td>Erros</td>
+                <td>{{ t3.erros.total }}</td>
+                <td>{{ t3.erros.total_porcento }}</td>
+            </tr>
+        </tbody>
+    </table>
+</body>
+</html>
