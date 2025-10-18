@@ -7,7 +7,7 @@ from django.urls import reverse
 from django.contrib.auth import login, logout
 from .models import Usuario, Conversa, Mensagem, Documento
 from .rag import consultar_rag, carregar_documentos_no_retriever
-from .run_tests import obtem_contexto, chama_sabia3
+from .run_tests import chama_sabia3, chama_sabia3_teste
 from django.contrib.auth.hashers import check_password
 from django.contrib import messages
 from django.core.exceptions import ValidationError, PermissionDenied
@@ -174,7 +174,6 @@ class ChatBotView(LoginRequiredMixin, View):
                 print(conteudo_PDF)
                 conteudo_PDF = "Conteúdo do PDF anexado à mensagem: " + conteudo_PDF
                 
-
             else:
                 documento = None
             
@@ -188,20 +187,7 @@ class ChatBotView(LoginRequiredMixin, View):
             # -----------------------------------
             # Faz uma requisição para a API da IA
             # -----------------------------------
-            client = openai.OpenAI(
-                api_key=config('LLM_API_KEY'),
-                base_url="https://chat.maritaca.ai/api"
-            )
-
-            response = client.chat.completions.create( # Corpo da requisição
-              model="sabia-3",
-              messages=[
-                {"role": "system", "content": usuario.prompt_instrucao},
-                {"role": "user", "content": f"Contexto: {contexto} Pergunta do usuário: {conteudo_mensagem_usuario} Conteúdo do PDF: {conteudo_PDF}"},
-              ],
-              max_tokens=8000
-            )
-            mensagem_IA = response.choices[0].message.content # Extrai mensagem da IA
+            mensagem_IA = chama_sabia3(conteudo_mensagem_usuario, usuario.prompt_instrucao, contexto, conteudo_PDF)
 
             nova_mensagem_IA = Mensagem(conversa=conversa_atual, texto=mensagem_IA, eh_do_usuario=False) #Salva resposta da IA
             nova_mensagem_IA.save()
@@ -455,7 +441,7 @@ class RunTestsView(View):
         
         count = 0
         for questao in questoes_meio_ambiente:
-            resultado = chama_sabia3(questao["questao"])
+            resultado = chama_sabia3_teste(questao["questao"])
             resultado = resultado.upper()[1]
 
             print("Compara:", resultado, questao["resposta"])
@@ -483,7 +469,7 @@ class RunTestsView(View):
 
         count = 0
         for questao in questoes_meio_ambiente:
-            resultado = chama_sabia3(questao["questao"], consultar_rag(questao["questao"]))
+            resultado = chama_sabia3_teste(questao["questao"], consultar_rag(questao["questao"]))
             resultado = resultado.upper()[1]
 
             print("Compara:", resultado, questao["resposta"])
@@ -507,7 +493,7 @@ class RunTestsView(View):
 
         count = 0
         for questao in questoes_gerais:
-            resultado = chama_sabia3(questao["questao"], consultar_rag(questao["questao"]))
+            resultado = chama_sabia3_teste(questao["questao"], consultar_rag(questao["questao"]))
             resultado = resultado.upper()[1]
 
             print("Compara:", resultado, questao["resposta"])
