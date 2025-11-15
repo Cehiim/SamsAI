@@ -13,7 +13,6 @@ from django.contrib import messages
 from django.core.exceptions import ValidationError, PermissionDenied
 from django.core import serializers
 from django.views.decorators.csrf import ensure_csrf_cookie
-from decouple import config
 from django.core.files.storage.base import Storage
 from django.views.decorators.clickjacking import xframe_options_exempt
 from PyPDF2 import PdfReader, PdfWriter
@@ -21,10 +20,8 @@ from io import BytesIO
 import pandas as pd
 import pdfplumber
 import json
-import openai
 import os
 import csv
-
 
 
 @ensure_csrf_cookie
@@ -439,191 +436,220 @@ class RunTestsView(View):
         teste1_acertos_ENADE = 0
         teste1_acertos_TOTAL = 0
         
-        count = 0
-        for questao in questoes_meio_ambiente:
-            resultado = chama_sabia3_teste(questao["questao"])
-            resultado = resultado.upper()[1]
+        try:
+            count = 0
+            for questao in questoes_meio_ambiente:
+                count += 1
+                print(count)
 
-            print("Compara:", resultado, questao["resposta"])
+                resultado = chama_sabia3_teste(questao["questao"])
+                resultado = resultado.upper()[1]
 
-            if resultado == questao["resposta"]:
-                teste1_acertos_TOTAL += 1
-                if questao["exame"] == "OAB":
-                    teste1_acertos_OAB += 1
-                else:
-                    teste1_acertos_ENADE += 1
+                print("Compara:", resultado, questao["resposta"])
 
-            count += 1
-            print(count)
-        print("\nTeste 1 concluído com sucesso")
-
-        carregar_documentos_no_retriever() # Carrega JSONs no retriever
-
-        # ---------------------------------------------------------------------
-        # TESTE 2 - Sabiá-3 com RAG ambiental com questões sobre meio ambiente
-        # ---------------------------------------------------------------------
-        print("Iniciando o teste com Sabiá-3 com RAG ambiental com questões sobre meio ambiente...")
-        teste2_acertos_OAB = 0
-        teste2_acertos_ENADE = 0
-        teste2_acertos_TOTAL = 0
-
-        count = 0
-        for questao in questoes_meio_ambiente:
-            resultado = chama_sabia3_teste(questao["questao"], consultar_rag(questao["questao"]))
-            resultado = resultado.upper()[1]
-
-            print("Compara:", resultado, questao["resposta"])
-
-            if resultado == questao["resposta"]:
-                teste2_acertos_TOTAL += 1
-                if questao["exame"] == "OAB":
-                    teste2_acertos_OAB += 1
-                else:
-                    teste2_acertos_ENADE += 1
-            
-            count += 1
-            print(count)
-        print("Teste 2 concluído com sucesso")
-
-        # --------------------------------------------------------
-        # TESTE 3 - Sabiá-3 com RAG ambiental com questões gerais
-        # --------------------------------------------------------
-        print("Iniciando o teste com Sabiá-3 com RAG ambiental com questões gerais...")
-        teste3_acertos_TOTAL = 0
-
-        count = 0
-        for questao in questoes_gerais:
-            resultado = chama_sabia3_teste(questao["questao"], consultar_rag(questao["questao"]))
-            resultado = resultado.upper()[1]
-
-            print("Compara:", resultado, questao["resposta"])
-
-            if resultado == questao["resposta"]:
-                teste3_acertos_TOTAL += 1
-            
-            count += 1
-            print(count)
-        print("Teste 3 concluído com sucesso")
-
-        path = os.path.join(settings.BASE_DIR, "resultados_testes.csv")
-        with open(path, "w", newline="", encoding="utf-8") as f:
-            writer = csv.writer(f)
-
-            for i in range(1, 4):
-                # Cabeçalho do teste
-                writer.writerow([f"Teste {i}"])
-
-                if i != 3:
-                    writer.writerow(["Resultados", "Total", "Total (%)", "Questões ENADE", "Questões ENADE (%)", "Questões OAB", "Questões OAB (%)"])
-                    
-                    if i == 1:
-                        writer.writerow([
-                            "Acertos", 
-                            f"{teste1_acertos_TOTAL}", 
-                            "%.2f" % ((teste1_acertos_TOTAL * 100) / TOTAL_QUESTOES), 
-                            f"{teste1_acertos_ENADE}", 
-                            "%.2f" % ((teste1_acertos_ENADE * 100) / NUM_QUESTOES_MEIO_AMB_ENADE),
-                            f"{teste1_acertos_OAB}",
-                            "%.2f" % ((teste1_acertos_OAB * 100) / NUM_QUESTOES_MEIO_AMB_OAB)
-                        ])
-                        writer.writerow([
-                            "Erros", 
-                            f"{TOTAL_QUESTOES - teste1_acertos_TOTAL}", 
-                            "%.2f" % (((TOTAL_QUESTOES - teste1_acertos_TOTAL) * 100) / TOTAL_QUESTOES), 
-                            f"{NUM_QUESTOES_MEIO_AMB_ENADE - teste1_acertos_ENADE}", 
-                            "%.2f" % (((NUM_QUESTOES_MEIO_AMB_ENADE - teste1_acertos_ENADE) * 100) / NUM_QUESTOES_MEIO_AMB_ENADE),
-                            f"{NUM_QUESTOES_MEIO_AMB_OAB - teste1_acertos_OAB}",
-                            "%.2f" % (((NUM_QUESTOES_MEIO_AMB_OAB - teste1_acertos_OAB) * 100) / NUM_QUESTOES_MEIO_AMB_OAB)
-                        ])
+                if resultado == questao["resposta"]:
+                    teste1_acertos_TOTAL += 1
+                    if questao["exame"] == "OAB":
+                        teste1_acertos_OAB += 1
                     else:
+                        teste1_acertos_ENADE += 1
+
+            print("\nTeste 1 concluído com sucesso")
+
+            carregar_documentos_no_retriever() # Carrega JSONs no retriever
+
+            # ---------------------------------------------------------------------
+            # TESTE 2 - Sabiá-3 com RAG ambiental com questões sobre meio ambiente
+            # ---------------------------------------------------------------------
+            print("Iniciando o teste com Sabiá-3 com RAG ambiental com questões sobre meio ambiente...")
+            teste2_acertos_OAB = 0
+            teste2_acertos_ENADE = 0
+            teste2_acertos_TOTAL = 0
+
+            count = 0
+            for questao in questoes_meio_ambiente:
+                count += 1
+                print(count)
+                contexto = consultar_rag(questao["questao"])
+
+                if count == 6:
+                    path = os.path.join(settings.BASE_DIR, "chunks_questoes.txt")
+                    with open(path, "w", newline="", encoding="utf-8") as f:
+                        f.write(f"Teste2) Chunks da questão {count}: \n"+ contexto)
+
+                if count == 7 or count == 9:
+                    path = os.path.join(settings.BASE_DIR, "chunks_questoes.txt")
+                    with open(path, "a", newline="", encoding="utf-8") as f:
+                        f.write(f"Teste 2) Chunks da questão {count}: \n"+ contexto)
+
+
+                resultado = chama_sabia3_teste(questao["questao"], contexto)
+                resultado = resultado.upper()[1]
+
+                print("Compara:", resultado, questao["resposta"])
+
+                if resultado == questao["resposta"]:
+                    teste2_acertos_TOTAL += 1
+                    if questao["exame"] == "OAB":
+                        teste2_acertos_OAB += 1
+                    else:
+                        teste2_acertos_ENADE += 1
+
+            print("Teste 2 concluído com sucesso")
+
+            # --------------------------------------------------------
+            # TESTE 3 - Sabiá-3 com RAG ambiental com questões gerais
+            # --------------------------------------------------------
+            print("Iniciando o teste com Sabiá-3 com RAG ambiental com questões gerais...")
+            teste3_acertos_TOTAL = 0
+
+            count = 0
+            for questao in questoes_gerais:
+                count += 1
+                print(count)
+                contexto = consultar_rag(questao["questao"])
+
+                if count == 1 or count == 4:
+                    path = os.path.join(settings.BASE_DIR, "chunks_questoes.txt")
+                    with open(path, "a", newline="", encoding="utf-8") as f:
+                        f.write(f"Teste 3) Chunks da questão {count}: \n" + contexto)
+
+                resultado = chama_sabia3_teste(questao["questao"], contexto)
+                resultado = resultado.upper()[1]
+
+                print("Compara:", resultado, questao["resposta"])
+
+                if resultado == questao["resposta"]:
+                    teste3_acertos_TOTAL += 1
+
+            print("Teste 3 concluído com sucesso")
+
+            # -------------------------------------------
+            # Salva resultados dos testes em arquivo CSV
+            # -------------------------------------------
+            path = os.path.join(settings.BASE_DIR, "resultados_testes.csv")
+            with open(path, "w", newline="", encoding="utf-8") as f:
+                writer = csv.writer(f)
+
+                for i in range(1, 4):
+                    # Cabeçalho do teste
+                    writer.writerow([f"Teste {i}"])
+
+                    if i != 3:
+                        writer.writerow(["Resultados", "Total", "Total (%)", "Questões ENADE", "Questões ENADE (%)", "Questões OAB", "Questões OAB (%)"])
+
+                        if i == 1:
+                            writer.writerow([
+                                "Acertos", 
+                                f"{teste1_acertos_TOTAL}", 
+                                "%.2f" % ((teste1_acertos_TOTAL * 100) / TOTAL_QUESTOES), 
+                                f"{teste1_acertos_ENADE}", 
+                                "%.2f" % ((teste1_acertos_ENADE * 100) / NUM_QUESTOES_MEIO_AMB_ENADE),
+                                f"{teste1_acertos_OAB}",
+                                "%.2f" % ((teste1_acertos_OAB * 100) / NUM_QUESTOES_MEIO_AMB_OAB)
+                            ])
+                            writer.writerow([
+                                "Erros", 
+                                f"{TOTAL_QUESTOES - teste1_acertos_TOTAL}", 
+                                "%.2f" % (((TOTAL_QUESTOES - teste1_acertos_TOTAL) * 100) / TOTAL_QUESTOES), 
+                                f"{NUM_QUESTOES_MEIO_AMB_ENADE - teste1_acertos_ENADE}", 
+                                "%.2f" % (((NUM_QUESTOES_MEIO_AMB_ENADE - teste1_acertos_ENADE) * 100) / NUM_QUESTOES_MEIO_AMB_ENADE),
+                                f"{NUM_QUESTOES_MEIO_AMB_OAB - teste1_acertos_OAB}",
+                                "%.2f" % (((NUM_QUESTOES_MEIO_AMB_OAB - teste1_acertos_OAB) * 100) / NUM_QUESTOES_MEIO_AMB_OAB)
+                            ])
+                        else:
+                            writer.writerow([
+                                "Acertos", 
+                                f"{teste2_acertos_TOTAL}", 
+                                "%.2f" % ((teste2_acertos_TOTAL * 100) / TOTAL_QUESTOES), 
+                                f"{teste2_acertos_ENADE}", 
+                                "%.2f" % ((teste2_acertos_ENADE * 100) / NUM_QUESTOES_MEIO_AMB_ENADE),
+                                f"{teste2_acertos_OAB}",
+                                "%.2f" % ((teste2_acertos_OAB * 100) / NUM_QUESTOES_MEIO_AMB_OAB)
+                            ])
+                            writer.writerow([
+                                "Erros", 
+                                f"{TOTAL_QUESTOES - teste2_acertos_TOTAL}", 
+                                "%.2f" % (((TOTAL_QUESTOES - teste2_acertos_TOTAL) * 100) / TOTAL_QUESTOES), 
+                                f"{NUM_QUESTOES_MEIO_AMB_ENADE - teste2_acertos_ENADE}", 
+                                "%.2f" % (((NUM_QUESTOES_MEIO_AMB_ENADE - teste2_acertos_ENADE) * 100) / NUM_QUESTOES_MEIO_AMB_ENADE),
+                                f"{NUM_QUESTOES_MEIO_AMB_OAB - teste2_acertos_OAB}",
+                                "%.2f" % (((NUM_QUESTOES_MEIO_AMB_OAB - teste2_acertos_OAB) * 100) / NUM_QUESTOES_MEIO_AMB_OAB)
+                            ])
+
+                    else:
+                        writer.writerow(["Resultados", "Total", "Total (%)"])
                         writer.writerow([
-                            "Acertos", 
-                            f"{teste2_acertos_TOTAL}", 
-                            "%.2f" % ((teste2_acertos_TOTAL * 100) / TOTAL_QUESTOES), 
-                            f"{teste2_acertos_ENADE}", 
-                            "%.2f" % ((teste2_acertos_ENADE * 100) / NUM_QUESTOES_MEIO_AMB_ENADE),
-                            f"{teste2_acertos_OAB}",
-                            "%.2f" % ((teste2_acertos_OAB * 100) / NUM_QUESTOES_MEIO_AMB_OAB)
+                            "Acertos",
+                            f"{teste3_acertos_TOTAL}",
+                            "%.2f" % ((teste3_acertos_TOTAL * 100) / TOTAL_QUESTOES), 
                         ])
                         writer.writerow([
-                            "Erros", 
-                            f"{TOTAL_QUESTOES - teste2_acertos_TOTAL}", 
-                            "%.2f" % (((TOTAL_QUESTOES - teste2_acertos_TOTAL) * 100) / TOTAL_QUESTOES), 
-                            f"{NUM_QUESTOES_MEIO_AMB_ENADE - teste2_acertos_ENADE}", 
-                            "%.2f" % (((NUM_QUESTOES_MEIO_AMB_ENADE - teste2_acertos_ENADE) * 100) / NUM_QUESTOES_MEIO_AMB_ENADE),
-                            f"{NUM_QUESTOES_MEIO_AMB_OAB - teste2_acertos_OAB}",
-                            "%.2f" % (((NUM_QUESTOES_MEIO_AMB_OAB - teste2_acertos_OAB) * 100) / NUM_QUESTOES_MEIO_AMB_OAB)
+                            "Erros",
+                            f"{TOTAL_QUESTOES - teste3_acertos_TOTAL}",
+                            "%.2f" % (((TOTAL_QUESTOES - teste3_acertos_TOTAL) * 100) / TOTAL_QUESTOES), 
                         ])
 
-                else:
-                    writer.writerow(["Resultados", "Total", "Total (%)"])
-                    writer.writerow([
-                        "Acertos",
-                        f"{teste3_acertos_TOTAL}",
-                        "%.2f" % ((teste3_acertos_TOTAL * 100) / TOTAL_QUESTOES), 
-                    ])
-                    writer.writerow([
-                        "Erros",
-                        f"{TOTAL_QUESTOES - teste3_acertos_TOTAL}",
-                        "%.2f" % (((TOTAL_QUESTOES - teste3_acertos_TOTAL) * 100) / TOTAL_QUESTOES), 
-                    ])
+                    writer.writerow([""])
+            print("Arquivo .csv construído com sucesso!")
 
-                writer.writerow([""])
-        print("Arquivo .csv construído com sucesso!")
+            # ----------------------------------------------------
+            # Exibe resultados em uma tabela HTML para cada teste
+            # ----------------------------------------------------
+            context = {
+                "t1": {
+                    "acertos": {
+                        "total": teste1_acertos_TOTAL,
+                        "total_porcento": "%.2f" % ((teste1_acertos_TOTAL * 100) / TOTAL_QUESTOES),
+                        "enade": teste1_acertos_ENADE,
+                        "enade_porcento":  "%.2f" % ((teste1_acertos_ENADE * 100) / NUM_QUESTOES_MEIO_AMB_ENADE),
+                        "oab": teste1_acertos_OAB,
+                        "oab_porcento":  "%.2f" % ((teste2_acertos_OAB * 100) / NUM_QUESTOES_MEIO_AMB_OAB)
+                    },
 
-        context = {
-            "t1": {
-                "acertos": {
-                    "total": teste1_acertos_TOTAL,
-                    "total_porcento": "%.2f" % ((teste1_acertos_TOTAL * 100) / TOTAL_QUESTOES),
-                    "enade": teste1_acertos_ENADE,
-                    "enade_porcento":  "%.2f" % ((teste1_acertos_ENADE * 100) / NUM_QUESTOES_MEIO_AMB_ENADE),
-                    "oab": teste1_acertos_OAB,
-                    "oab_porcento":  "%.2f" % ((teste2_acertos_OAB * 100) / NUM_QUESTOES_MEIO_AMB_OAB)
+                    "erros": {
+                        "total": TOTAL_QUESTOES - teste1_acertos_TOTAL,
+                        "total_porcento": "%.2f" % (((TOTAL_QUESTOES - teste1_acertos_TOTAL) * 100) / TOTAL_QUESTOES),
+                        "enade": NUM_QUESTOES_MEIO_AMB_ENADE - teste1_acertos_ENADE,
+                        "enade_porcento": "%.2f" % (((NUM_QUESTOES_MEIO_AMB_ENADE - teste1_acertos_ENADE) * 100) / NUM_QUESTOES_MEIO_AMB_ENADE),
+                        "oab": NUM_QUESTOES_MEIO_AMB_OAB - teste1_acertos_OAB,
+                        "oab_porcento": "%.2f" % (((NUM_QUESTOES_MEIO_AMB_OAB - teste1_acertos_OAB) * 100) / NUM_QUESTOES_MEIO_AMB_OAB)
+                    }
                 },
 
-                "erros": {
-                    "total": TOTAL_QUESTOES - teste1_acertos_TOTAL,
-                    "total_porcento": "%.2f" % (((TOTAL_QUESTOES - teste1_acertos_TOTAL) * 100) / TOTAL_QUESTOES),
-                    "enade": NUM_QUESTOES_MEIO_AMB_ENADE - teste1_acertos_ENADE,
-                    "enade_porcento": "%.2f" % (((NUM_QUESTOES_MEIO_AMB_ENADE - teste1_acertos_ENADE) * 100) / NUM_QUESTOES_MEIO_AMB_ENADE),
-                    "oab": NUM_QUESTOES_MEIO_AMB_OAB - teste1_acertos_OAB,
-                    "oab_porcento": "%.2f" % (((NUM_QUESTOES_MEIO_AMB_OAB - teste1_acertos_OAB) * 100) / NUM_QUESTOES_MEIO_AMB_OAB)
-                }
-            },
+                "t2": {
+                    "acertos": {
+                        "total": teste2_acertos_TOTAL,
+                        "total_porcento": "%.2f" % ((teste2_acertos_TOTAL * 100) / TOTAL_QUESTOES),
+                        "enade": teste2_acertos_ENADE,
+                        "enade_porcento":  "%.2f" % ((teste2_acertos_ENADE * 100) / NUM_QUESTOES_MEIO_AMB_ENADE),
+                        "oab": teste2_acertos_OAB,
+                        "oab_porcento":  "%.2f" % ((teste2_acertos_OAB * 100) / NUM_QUESTOES_MEIO_AMB_OAB)
+                    },
 
-            "t2": {
-                "acertos": {
-                    "total": teste2_acertos_TOTAL,
-                    "total_porcento": "%.2f" % ((teste2_acertos_TOTAL * 100) / TOTAL_QUESTOES),
-                    "enade": teste2_acertos_ENADE,
-                    "enade_porcento":  "%.2f" % ((teste2_acertos_ENADE * 100) / NUM_QUESTOES_MEIO_AMB_ENADE),
-                    "oab": teste2_acertos_OAB,
-                    "oab_porcento":  "%.2f" % ((teste2_acertos_OAB * 100) / NUM_QUESTOES_MEIO_AMB_OAB)
+                    "erros": {
+                        "total": TOTAL_QUESTOES - teste2_acertos_TOTAL,
+                        "total_porcento": "%.2f" % (((TOTAL_QUESTOES - teste2_acertos_TOTAL) * 100) / TOTAL_QUESTOES),
+                        "enade": NUM_QUESTOES_MEIO_AMB_ENADE - teste2_acertos_ENADE,
+                        "enade_porcento": "%.2f" % (((NUM_QUESTOES_MEIO_AMB_ENADE - teste2_acertos_ENADE) * 100) / NUM_QUESTOES_MEIO_AMB_ENADE),
+                        "oab": NUM_QUESTOES_MEIO_AMB_OAB - teste2_acertos_OAB,
+                        "oab_porcento": "%.2f" % (((NUM_QUESTOES_MEIO_AMB_OAB - teste2_acertos_OAB) * 100) / NUM_QUESTOES_MEIO_AMB_OAB)
+                    }
                 },
 
-                "erros": {
-                    "total": TOTAL_QUESTOES - teste2_acertos_TOTAL,
-                    "total_porcento": "%.2f" % (((TOTAL_QUESTOES - teste2_acertos_TOTAL) * 100) / TOTAL_QUESTOES),
-                    "enade": NUM_QUESTOES_MEIO_AMB_ENADE - teste2_acertos_ENADE,
-                    "enade_porcento": "%.2f" % (((NUM_QUESTOES_MEIO_AMB_ENADE - teste2_acertos_ENADE) * 100) / NUM_QUESTOES_MEIO_AMB_ENADE),
-                    "oab": NUM_QUESTOES_MEIO_AMB_OAB - teste2_acertos_OAB,
-                    "oab_porcento": "%.2f" % (((NUM_QUESTOES_MEIO_AMB_OAB - teste2_acertos_OAB) * 100) / NUM_QUESTOES_MEIO_AMB_OAB)
-                }
-            },
+                "t3": {
+                    "acertos": {
+                        "total": teste3_acertos_TOTAL,
+                        "total_porcento": "%.2f" % ((teste3_acertos_TOTAL * 100) / TOTAL_QUESTOES),
+                    },
 
-            "t3": {
-                "acertos": {
-                    "total": teste3_acertos_TOTAL,
-                    "total_porcento": "%.2f" % ((teste3_acertos_TOTAL * 100) / TOTAL_QUESTOES),
-                },
-
-                "erros": {
-                    "total": TOTAL_QUESTOES - teste3_acertos_TOTAL,
-                    "total_porcento": "%.2f" % (((TOTAL_QUESTOES - teste3_acertos_TOTAL) * 100) / TOTAL_QUESTOES)
+                    "erros": {
+                        "total": TOTAL_QUESTOES - teste3_acertos_TOTAL,
+                        "total_porcento": "%.2f" % (((TOTAL_QUESTOES - teste3_acertos_TOTAL) * 100) / TOTAL_QUESTOES)
+                    }
                 }
             }
-        }
-                
-
-        return render(request, 'run-tests.html', context)
+            return render(request, 'run-tests.html', context)
+        
+        except Exception as e:
+            return JsonResponse({"success": False, "error": str(e)}, status=500)

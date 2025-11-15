@@ -19,3 +19,5 @@ nginx
 .prettierrc
 
 resultados_testes.csv
+
+chunks_questoes.txt
