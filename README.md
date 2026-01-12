@@ -1,6 +1,3 @@
-# Endereço na Internet
- * http://54.198.72.52/
-
 # Passo a passo para configuração do ambiente virtual
 
 ## Pré-requisitos:
